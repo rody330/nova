@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>NOVA</title>
+<link rel="manifest" href="/nova/manifest.json">
+<meta name="theme-color" content="#05060a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NOVA">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzA1MDYwYSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTQwIiBmaWxsPSIjNjdlOGY5Ii8+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI5MCIgZmlsbD0iI2E3OGJmYSIvPjxjaXJjbGUgY3g9IjIzMCIgY3k9IjIzMCIgcj0iMzUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii41Ii8+PC9zdmc+">  
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;overflow:hidden}
@@ -925,5 +931,14 @@ function greet(){
 // ============ BOOT ============
 try{resize();requestAnimationFrame(loop);greet();}catch(e){console.error(e);document.body.innerHTML='<div style="padding:20px;color:#fff;font-family:sans-serif">Error: '+e.message+'</div>';}
 </script>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/nova/service-worker.js').catch(function(e) {
+      console.log('SW error:', e);
+    });
+  });
+}
+  </script>
 </body>
   </html>
