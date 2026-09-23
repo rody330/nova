@@ -1,0 +1,19 @@
+{
+  "name": "NOVA — AI Assistant",
+  "short_name": "NOVA",
+  "description": "Neural Operations Voice Assistant",
+  "start_url": "/nova/",
+  "scope": "/nova/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05060a",
+  "theme_color": "#05060a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzA1MDYwYSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTQwIiBmaWxsPSIjNjdlOGY5Ii8+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI5MCIgZmlsbD0iI2E3OGJmYSIvPjxjaXJjbGUgY3g9IjIzMCIgY3k9IjIzMCIgcj0iMzUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii41Ii8+PC9zdmc+",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
