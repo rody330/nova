@@ -1,4 +1,4 @@
-const CACHE = 'nova-v1';
+const CACHE = 'nova-v2';
 const ASSETS = ['/nova/', '/nova/index.html', '/nova/manifest.json'];
 
 self.addEventListener('install', function(e) {
