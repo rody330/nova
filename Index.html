@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NOVA</title>
+<link rel="manifest" href="/nova/manifest.json">
+<meta name="theme-color" content="#05060a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NOVA">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwMCIgZmlsbD0iIzA1MDYwYSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTQwIiBmaWxsPSIjNjdlOGY5Ii8+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI5MCIgZmlsbD0iI2E3OGJmYSIvPjxjaXJjbGUgY3g9IjIzMCIgY3k9IjIzMCIgcj0iMzUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9Ii41Ii8+PC9zdmc+">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:#05060a;color:#e6f1ff;font-family:system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.bg{position:fixed;inset:0;background:radial-gradient(900px 600px at 10% 5%,rgba(34,211,238,.1),transparent 60%),radial-gradient(900px 700px at 90% 95%,rgba(168,85,247,.13),transparent 60%),#05060a;z-index:0}
+.app{position:relative;z-index:1;height:100dvh;display:grid;grid-template-columns:340px 1fr}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;border-right:1px solid rgba(120,200,255,.09);background:linear-gradient(180deg,rgba(10,16,28,.5),rgba(5,6,10,.2))}
+.orb-wrap{width:100%;max-width:300px;aspect-ratio:1}
+canvas#orb{width:100%;height:100%;display:block}
+.brand{margin:4px 0 0;font-size:30px;font-weight:800;letter-spacing:.34em;text-indent:.34em;background:linear-gradient(90deg,#67e8f9,#a78bfa 55%,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tag{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#5f7796}
+.status{margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(120,200,255,.06);border:1px solid rgba(120,200,255,.14);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9fd8ef}
+.dot{width:7px;height:7px;border-radius:50%;background:#22d3ee;box-shadow:0 0 12px #22d3ee;animation:pulse 1.9s infinite}
+.status.listening .dot{background:#34d399;box-shadow:0 0 12px #34d399}
+.status.thinking .dot{background:#fbbf24;box-shadow:0 0 12px #fbbf24}
+.status.speaking .dot{background:#c084fc;box-shadow:0 0 12px #c084fc}
+.status.searching .dot{background:#38bdf8;box-shadow:0 0 12px #38bdf8}
+.status.rendering .dot{background:#f472b6;box-shadow:0 0 12px #f472b6}
+.status.launching .dot{background:#4ade80;box-shadow:0 0 12px #4ade80}
+.status.notifying .dot{background:#fbbf24;box-shadow:0 0 12px #fbbf24}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.controls{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center}
+.chip{cursor:pointer;font:inherit;font-size:11px;padding:7px 12px;border-radius:999px;color:#a8c6e0;background:rgba(120,200,255,.05);border:1px solid rgba(120,200,255,.16);transition:.2s}
+.chip:hover{color:#e6f1ff;border-color:rgba(103,232,249,.5);background:rgba(103,232,249,.1)}
+.chip.off{opacity:.45}
+.chip.mem{color:#fcd34d;border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.07)}
+.chip.bell{color:#f9a8d4;border-color:rgba(244,114,182,.3);background:rgba(244,114,182,.07)}
+.chip.bell.on{color:#86efac;border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.12)}
+.chat{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.messages{flex:1;min-height:0;overflow-y:auto;padding:28px 34px 10px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:7px}
+.messages::-webkit-scrollbar-thumb{background:rgba(120,200,255,.16);border-radius:9px}
+.msg{max-width:min(76%,640px);padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;animation:rise .35s cubic-bezier(.2,.9,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;color:#031018;font-weight:500;background:linear-gradient(135deg,#67e8f9,#38bdf8);border-bottom-right-radius:6px;box-shadow:0 8px 26px -10px rgba(56,189,248,.7)}
+.msg.bot{align-self:flex-start;color:#d9e9f8;background:rgba(120,200,255,.055);border:1px solid rgba(120,200,255,.13);border-bottom-left-radius:6px}
+.msg.bot::before{content:'NOVA';display:block;font-size:9px;letter-spacing:.22em;color:#4d6d8c;margin-bottom:5px;font-weight:700}
+.msg.reminder{background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(244,114,182,.1));border-color:rgba(251,191,36,.35)}
+.msg.reminder::before{color:#fcd34d}
+.msg.card-msg{max-width:min(94%,720px);padding:0;background:transparent;border:0}
+.msg.card-msg::before{display:none}
+.card{border-radius:18px;overflow:hidden;background:linear-gradient(180deg,rgba(14,23,38,.92),rgba(9,15,26,.92));border:1px solid rgba(120,200,255,.16);box-shadow:0 24px 60px -32px rgba(0,0,0,.95);width:100%}
+.card-top{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(120,200,255,.09);background:rgba(120,200,255,.03)}
+.card-top .kicker{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:#4d6d8c;font-weight:700}
+.badge{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(192,132,252,.14);color:#d8b4fe;border:1px solid rgba(192,132,252,.28)}
+.badge.wiki{background:rgba(103,232,249,.12);color:#a5f3fc;border-color:rgba(103,232,249,.28)}
+.badge.web{background:rgba(56,189,248,.12);color:#7dd3fc;border-color:rgba(56,189,248,.28)}
+.badge.globe{background:rgba(34,211,238,.14);color:#67e8f9;border-color:rgba(34,211,238,.34)}
+.badge.coin{background:rgba(251,191,36,.14);color:#fcd34d;border-color:rgba(251,191,36,.34)}
+.badge.calc{background:rgba(167,139,250,.16);color:#c4b5fd;border-color:rgba(167,139,250,.34)}
+.badge.app{background:rgba(74,222,128,.14);color:#86efac;border-color:rgba(74,222,128,.34)}
+.badge.music{background:rgba(244,114,182,.16);color:#f9a8d4;border-color:rgba(244,114,182,.34)}
+.badge.bell{background:rgba(251,191,36,.16);color:#fcd34d;border-color:rgba(251,191,36,.4)}
+.badge.voice{background:rgba(34,211,238,.16);color:#67e8f9;border-color:rgba(34,211,238,.4)}
+.card-hero{display:flex;flex-wrap:wrap}
+.card-img{width:180px;height:220px;object-fit:cover;display:block;flex-shrink:0;background:#0b1220}
+.card-body{padding:14px 16px 16px;flex:1;min-width:220px}
+.card-name{margin:0 0 4px;font-size:19px;font-weight:750;color:#e6f1ff;line-height:1.25}
+.card-sub{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#5f8fb0;margin-bottom:10px}
+.card-text{margin:0;font-size:13.5px;line-height:1.7;color:#b9d2e8;max-height:240px;overflow-y:auto;padding-right:6px}
+.card-links{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.card-links a{text-decoration:none;font-size:11.5px;padding:7px 12px;border-radius:999px;color:#9fd8ef;background:rgba(103,232,249,.08);border:1px solid rgba(103,232,249,.22);transition:.2s}
+.card-links a:hover{background:rgba(103,232,249,.18);color:#e6f1ff}
+.card-links a.alt{color:#d8b4fe;background:rgba(192,132,252,.08);border-color:rgba(192,132,252,.24)}
+.card-links a.pink{color:#f9a8d4;background:rgba(244,114,182,.1);border-color:rgba(244,114,182,.26)}
+.results{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.results li a{display:block;text-decoration:none;padding:9px 12px;border-radius:11px;background:rgba(120,200,255,.045);border:1px solid rgba(120,200,255,.1);transition:.2s}
+.results li a:hover{background:rgba(120,200,255,.1);border-color:rgba(103,232,249,.35)}
+.results .r-title{font-size:13px;color:#cfe6f7;font-weight:600}
+.results .r-snip{font-size:11.5px;color:#7d9ab5;margin-top:3px;line-height:1.5}
+.caret{display:inline-block;width:7px;height:14px;vertical-align:-2px;margin-left:2px;background:#67e8f9;border-radius:1px;animation:blink .85s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.typing{display:flex;gap:5px;align-items:center;height:14px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#38bdf8;animation:bounce 1.3s infinite}
+.typing span:nth-child(2){animation-delay:.16s}
+.typing span:nth-child(3){animation-delay:.32s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-5px);opacity:1}}
+.loader{padding:14px 16px;display:flex;align-items:center;gap:12px}
+.loader .ico{width:36px;height:36px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;font-size:16px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.24);animation:spin 2.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.globe-scene{position:relative;width:100%;height:400px;background:radial-gradient(circle at 50% 45%,rgba(20,40,80,.55),#03050c 70%);overflow:hidden;cursor:grab;touch-action:none}
+.globe-scene canvas{display:block;width:100%;height:100%}
+.globe-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:rgba(159,216,239,.75);background:rgba(0,0,0,.5);padding:5px 12px;border-radius:999px;border:1px solid rgba(103,232,249,.2);pointer-events:none;white-space:nowrap}
+.coin-scene{position:relative;height:300px;display:grid;place-items:center;perspective:1400px;background:radial-gradient(circle at 50% 60%,rgba(251,191,36,.1),transparent 65%)}
+.coin-ground{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);width:160px;height:26px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.65),transparent 72%);filter:blur(8px);animation:gsh 2.4s cubic-bezier(.15,.75,.25,1) forwards}
+@keyframes gsh{0%,100%{opacity:.9;transform:translateX(-50%) scaleX(1)}45%{opacity:.2;transform:translateX(-50%) scaleX(.5)}}
+.coin-wrap{animation:toss 2.4s cubic-bezier(.15,.75,.25,1) forwards;transform-style:preserve-3d}
+@keyframes toss{0%{transform:translateY(0)}45%{transform:translateY(-100px)}60%{transform:translateY(-105px)}100%{transform:translateY(-8px)}}
+.coin-3d{width:140px;height:140px;position:relative;transform-style:preserve-3d;will-change:transform}
+.coin-face{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;display:grid;place-items:center;font-size:52px;font-weight:900;color:#3a1f00;font-family:Georgia,serif;background:radial-gradient(circle at 32% 26%,#fff8d2,#ffe066 14%,#f0b429 40%,#d49520 62%,#7a4d09);box-shadow:inset 0 0 0 3px rgba(255,222,120,.6),inset 0 -10px 18px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.55),0 0 40px rgba(251,191,36,.35);border:2px solid #8a5410;text-shadow:0 1px 0 rgba(255,255,255,.55);user-select:none}
+.coin-face::after{content:'';position:absolute;inset:14px;border-radius:50%;border:2px dashed rgba(122,77,9,.42)}
+.coin-face.back{transform:rotateX(180deg)}
+.coin-face .star{position:absolute;top:10px;font-size:10px;color:rgba(122,77,9,.65);letter-spacing:.18em;font-weight:700}
+.coin-face .star.b{top:auto;bottom:10px;transform:rotate(180deg)}
+.coin-result{position:absolute;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);font-size:13px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;color:#fcd34d;opacity:0;text-shadow:0 0 18px rgba(251,191,36,.65);transition:.5s cubic-bezier(.2,.9,.3,1.4)}
+.coin-result.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.calc-scene{position:relative;padding:24px 18px 28px;text-align:center;background:radial-gradient(circle at 50% 0%,rgba(167,139,250,.12),transparent 60%),radial-gradient(circle at 50% 100%,rgba(103,232,249,.08),transparent 60%)}
+.calc-expr{font-size:20px;letter-spacing:.08em;color:#9fd8ef;min-height:32px;font-weight:500;font-family:ui-monospace,Menlo,monospace}
+.calc-expr .tok-num{color:#67e8f9}
+.calc-expr .tok-op{color:#c084fc}
+.calc-expr .tok-br{color:#f0abfc}
+.calc-eq{font-size:26px;color:#5f7796;margin:12px 0;opacity:0;transform:scale(.6);transition:.35s cubic-bezier(.2,.9,.3,1.4);font-weight:300}
+.calc-eq.show{opacity:1;transform:scale(1)}
+.calc-result{position:relative;display:inline-block;font-size:44px;font-weight:800;background:linear-gradient(90deg,#67e8f9,#a78bfa 55%,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;transform:scale(.55);transition:.55s cubic-bezier(.2,.9,.3,1.4);filter:drop-shadow(0 0 24px rgba(103,232,249,.5));min-height:56px;padding:0 6px;word-break:break-all;max-width:100%}
+.calc-result.show{opacity:1;transform:scale(1)}
+.burst{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#67e8f9,#a78bfa);box-shadow:0 0 14px rgba(103,232,249,.9);pointer-events:none;animation:burst 1.1s cubic-bezier(.15,.65,.3,1) forwards}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(0);opacity:1}25%{transform:translate(-50%,-50%) scale(1.2);opacity:1}100%{transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(0);opacity:0}}
+.launch-scene{padding:24px 18px 22px;text-align:center;background:radial-gradient(circle at 50% 0%,rgba(74,222,128,.1),transparent 60%)}
+.launch-icon{width:80px;height:80px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;font-size:38px;background:linear-gradient(135deg,rgba(103,232,249,.14),rgba(167,139,250,.14));border:1px solid rgba(103,232,249,.28);box-shadow:0 0 40px -8px rgba(103,232,249,.5);animation:pop .55s cubic-bezier(.2,.9,.3,1.4) both}
+@keyframes pop{0%{transform:scale(.4) rotate(-14deg);opacity:0}60%{transform:scale(1.12) rotate(3deg);opacity:1}100%{transform:scale(1);opacity:1}}
+.launch-title{font-size:18px;font-weight:750;color:#e6f1ff;margin:0 0 4px}
+.launch-sub{font-size:12px;color:#7d9ab5;margin:0 0 18px;min-height:16px}
+.launch-btn{display:inline-flex;align-items:center;gap:9px;padding:11px 20px;border-radius:13px;font-size:13.5px;font-weight:650;color:#031018;background:linear-gradient(135deg,#22d3ee,#818cf8);border:0;cursor:pointer;box-shadow:0 12px 32px -10px rgba(34,211,238,.85);text-decoration:none;transition:.2s}
+.launch-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.launch-btn.music{background:linear-gradient(135deg,#f472b6,#c084fc);box-shadow:0 12px 32px -10px rgba(244,114,182,.85)}
+.launch-note{margin-top:12px;font-size:10.5px;color:#5f7796}
+.ts-scene{position:relative;padding:26px 20px 22px;background:radial-gradient(circle at 50% 0%,rgba(244,114,182,.14),transparent 60%)}
+.ts-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:18px}
+.ts-logo-icon{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:21px;background:linear-gradient(135deg,rgba(244,114,182,.18),rgba(192,132,252,.18));border:1px solid rgba(244,114,182,.4);box-shadow:0 0 26px -6px rgba(244,114,182,.7)}
+.ts-logo-name{font-size:14px;font-weight:750;letter-spacing:.16em;text-transform:uppercase;color:#f9a8d4;text-shadow:0 0 18px rgba(244,114,182,.5)}
+.ts-bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:15px;background:rgba(0,0,0,.55);border:1.5px solid rgba(244,114,182,.36);box-shadow:0 0 30px -8px rgba(244,114,182,.5);font-family:ui-monospace,Menlo,monospace;font-size:15px;color:#fce7f3;transition:.4s;min-height:52px}
+.ts-bar.typing{border-color:rgba(244,114,182,.85);box-shadow:0 0 46px -4px rgba(244,114,182,.85)}
+.ts-bar.done{border-color:rgba(74,222,128,.75);box-shadow:0 0 44px -4px rgba(74,222,128,.75)}
+.ts-icon{font-size:17px;flex-shrink:0;opacity:.85}
+.ts-text{flex:1;min-height:20px;word-break:break-all}
+.ts-placeholder{color:#5f7796;font-style:italic}
+.ts-caret{display:inline-block;width:2px;height:18px;background:#f472b6;margin-left:2px;vertical-align:-3px;box-shadow:0 0 12px rgba(244,114,182,.9);animation:tblink .8s steps(1) infinite}
+@keyframes tblink{50%{opacity:0}}
+.ts-meta{margin-top:14px;text-align:center;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#5f8fb0;min-height:15px}
+.ts-status{margin-top:8px;text-align:center;font-size:12px;color:#f9a8d4;min-height:18px;opacity:0;transition:.35s;display:flex;align-items:center;justify-content:center;gap:8px}
+.ts-status.show{opacity:1}
+.ts-status.success{color:#86efac}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(244,114,182,.3);border-top-color:#f472b6;border-radius:50%;animation:spin .7s linear infinite}
+.ts-status.success .spinner{display:none}
+.ts-actions{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:16px;opacity:0;transform:translateY(6px);transition:.4s}
+.ts-actions.show{opacity:1;transform:none}
+.ts-actions a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:11.5px;padding:8px 13px;border-radius:11px;color:#f9a8d4;background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.3);font-weight:600;transition:.2s}
+.ts-actions a:hover{background:rgba(244,114,182,.24);color:#fce7f3}
+.ts-actions a.alt{color:#c4b5fd;background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3)}
+.music-meta{padding:12px 16px;display:flex;align-items:center;gap:11px}
+.music-icon{width:42px;height:42px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;font-size:19px;background:linear-gradient(135deg,rgba(244,114,182,.16),rgba(192,132,252,.16));border:1px solid rgba(244,114,182,.28)}
+.music-info{flex:1;min-width:0}
+.music-title{font-size:13.5px;font-weight:700;color:#e6f1ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music-platform{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#f9a8d4;margin-top:2px}
+.bell-scene{padding:24px 18px;text-align:center;background:radial-gradient(circle at 50% 0%,rgba(251,191,36,.12),transparent 60%)}
+.bell-icon{width:76px;height:76px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;font-size:36px;background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(244,114,182,.14));border:1px solid rgba(251,191,36,.4);box-shadow:0 0 40px -6px rgba(251,191,36,.6);animation:bell-shake .8s ease-in-out}
+@keyframes bell-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(12deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(8deg)}}
+.bell-title{font-size:18px;font-weight:750;color:#fcd34d;margin:0 0 4px}
+.bell-sub{font-size:12.5px;color:#7d9ab5;margin:0 0 16px}
+.bell-btn{display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:13px;font-size:13.5px;font-weight:650;color:#031018;background:linear-gradient(135deg,#fbbf24,#f472b6);border:0;cursor:pointer;box-shadow:0 12px 32px -10px rgba(251,191,36,.85);transition:.2s}
+.bell-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.bell-btn:disabled{opacity:.5;cursor:default;transform:none}
+.composer-wrap{padding:12px 34px 22px;display:flex;flex-direction:column;gap:10px}
+.sug-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.sug-row::-webkit-scrollbar{display:none}
+.sug{cursor:pointer;white-space:nowrap;font:inherit;font-size:11.5px;padding:7px 12px;border-radius:999px;color:#8fb4d4;background:rgba(120,200,255,.04);border:1px solid rgba(120,200,255,.13);transition:.2s}
+.sug:hover{color:#e6f1ff;border-color:rgba(103,232,249,.45);background:rgba(103,232,249,.09)}
+.composer{display:flex;align-items:center;gap:9px;padding:8px 9px 8px 15px;border-radius:19px;background:rgba(10,18,30,.72);border:1px solid rgba(120,200,255,.16);backdrop-filter:blur(14px);box-shadow:0 20px 50px -25px rgba(0,0,0,.9);transition:.25s}
+.composer:focus-within{border-color:rgba(103,232,249,.55);box-shadow:0 0 0 4px rgba(34,211,238,.09)}
+#input{flex:1;background:transparent;border:0;outline:0;color:#e6f1ff;font:inherit;font-size:14.5px;padding:7px 0;min-width:0}
+#input::placeholder{color:#4d6d8c}
+.icon-btn{cursor:pointer;border:0;display:grid;place-items:center;width:40px;height:40px;border-radius:13px;font-size:16px;background:rgba(120,200,255,.07);color:#a8c6e0;transition:.2s;flex-shrink:0}
+.icon-btn:hover{background:rgba(120,200,255,.15);color:#e6f1ff}
+.icon-btn.rec{background:rgba(239,68,68,.2);color:#fca5a5;box-shadow:0 0 0 4px rgba(239,68,68,.12);animation:pulse 1.2s infinite}
+#sendBtn{background:linear-gradient(135deg,#22d3ee,#818cf8);color:#031018;font-weight:700;box-shadow:0 8px 26px -8px rgba(34,211,238,.85)}
+#sendBtn:disabled{opacity:.4;cursor:not-allowed}
+.mem-modal{position:fixed;inset:0;z-index:50;background:rgba(3,5,12,.82);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:22px}
+.mem-modal.show{display:flex}
+.mem-panel{width:100%;max-width:540px;max-height:80vh;background:linear-gradient(180deg,rgba(14,23,38,.98),rgba(9,15,26,.98));border:1px solid rgba(251,191,36,.28);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;animation:pop .32s cubic-bezier(.2,.9,.3,1.3) both}
+.mem-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(251,191,36,.16);background:rgba(251,191,36,.04)}
+.mem-head h3{margin:0;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#fcd34d;font-weight:700}
+.mem-close{cursor:pointer;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.05);border:0;color:#a8c6e0;font-size:15px;display:grid;place-items:center}
+.mem-body{padding:18px;overflow-y:auto;flex:1}
+.mem-stat{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:16px}
+.mem-stat>div{padding:10px;border-radius:13px;text-align:center;background:rgba(120,200,255,.05);border:1px solid rgba(120,200,255,.12)}
+.mem-stat .num{font-size:20px;font-weight:800;background:linear-gradient(90deg,#67e8f9,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mem-stat .lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5f8fb0;margin-top:3px}
+.mem-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mem-list li{padding:9px 12px;border-radius:11px;background:rgba(120,200,255,.04);border:1px solid rgba(120,200,255,.1);font-size:12px;color:#b9d2e8;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.mem-list .mem-when{font-size:10px;color:#5f7796;flex-shrink:0}
+.mem-empty{text-align:center;color:#5f7796;font-size:12.5px;padding:26px 10px;line-height:1.7}
+.mem-actions{display:flex;gap:9px;margin-top:16px}
+.mem-actions button{flex:1;padding:10px 12px;border-radius:11px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;border:1px solid}
+.mem-actions .danger{color:#fca5a5;background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+.mem-actions .ok{color:#86efac;background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3)}
+.toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:92vw}
+.toast{pointer-events:auto;min-width:280px;max-width:420px;padding:12px 16px;border-radius:16px;background:linear-gradient(135deg,rgba(251,191,36,.96),rgba(244,114,182,.92));color:#1a0d00;font-weight:600;box-shadow:0 20px 50px -18px rgba(0,0,0,.9),0 0 30px -8px rgba(251,191,36,.8);display:flex;align-items:flex-start;gap:11px;animation:toast-in .45s cubic-bezier(.2,.9,.3,1.4) both;cursor:pointer}
+.toast.out{animation:toast-out .35s cubic-bezier(.4,0,.7,.2) both}
+@keyframes toast-in{0%{opacity:0;transform:translateY(-30px) scale(.9)}100%{opacity:1;transform:none}}
+@keyframes toast-out{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-20px) scale(.92)}}
+.toast .t-ico{font-size:22px;flex-shrink:0;line-height:1}
+.toast .t-body{flex:1;min-width:0}
+.toast .t-title{font-size:13.5px;font-weight:750;letter-spacing:.01em}
+.toast .t-msg{font-size:12px;margin-top:2px;opacity:.85;line-height:1.45}
+.toast .t-when{font-size:10px;opacity:.65;margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .stage{padding:12px 12px 4px;border-right:0;border-bottom:1px solid rgba(120,200,255,.09);gap:2px}
+  .orb-wrap{max-width:110px}
+  .brand{font-size:18px;letter-spacing:.28em}
+  .tag{display:none}
+  .status{margin-top:4px;padding:5px 11px;font-size:9.5px}
+  .controls{margin-top:8px;padding-bottom:8px}
+  .messages{padding:14px 12px 6px;gap:10px}
+  .msg{max-width:92%;font-size:13px;padding:10px 12px}
+  .msg.card-msg{max-width:100%}
+  .card-hero{flex-direction:column}
+  .card-img{width:100%;height:170px}
+  .card-body{padding:12px;min-width:0}
+  .card-name{font-size:16px}
+  .card-text{font-size:12.5px;max-height:170px}
+  .composer-wrap{padding:8px 12px 14px}
+  .globe-scene{height:300px}
+  .coin-scene{height:250px}
+  .coin-3d{width:115px;height:115px}
+  .coin-face{font-size:42px}
+  .calc-expr{font-size:17px}
+  .calc-result{font-size:34px}
+  .launch-icon{width:68px;height:68px;font-size:32px}
+  .mem-stat{grid-template-columns:1fr 1fr}
+  .mem-stat>div:nth-child(3){grid-column:span 2}
+  .ts-scene{padding:20px 12px 16px}
+  .ts-bar{font-size:13px;padding:11px 13px;min-height:46px}
+  .bell-icon{width:64px;height:64px;font-size:30px}
+}
+@media (max-width:520px){
+  .orb-wrap{max-width:70px}
+  .brand{font-size:15px}
+  .messages{padding:10px 8px 4px;gap:8px}
+  .msg{max-width:96%;font-size:12.5px;padding:9px 11px}
+  .composer{padding:5px 5px 5px 11px;border-radius:15px}
+  #input{font-size:13px}
+  .icon-btn{width:34px;height:34px;font-size:14px;border-radius:11px}
+  .sug{font-size:10.5px;padding:6px 10px}
+  .composer-wrap{padding:6px 8px 10px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="app">
+  <aside class="stage">
+    <div class="orb-wrap"><canvas id="orb"></canvas></div>
+    <h1 class="brand">NOVA</h1>
+    <p class="tag">Neural · Voice Assistant</p>
+    <div class="status" id="status"><span class="dot"></span><span id="statusText">Online</span></div>
+    <div class="controls">
+      <button class="chip bell" id="bellBtn">🔔 Alerts</button>
+      <button class="chip" id="voiceToggle">🔊 Voice On</button>
+      <button class="chip mem" id="memBtn">🧠 Memory</button>
+      <button class="chip" id="clearBtn">⟲ Reset</button>
+    </div>
+  </aside>
+  <main class="chat">
+    <div class="messages" id="messages"></div>
+    <div class="composer-wrap">
+      <div class="sug-row" id="suggestions"></div>
+      <div class="composer">
+        <button class="icon-btn" id="micBtn">🎙</button>
+        <input id="input" placeholder="Ask NOVA anything…" autocomplete="off" spellcheck="false">
+        <button class="icon-btn" id="webBtn">🌐</button>
+        <button class="icon-btn" id="sendBtn">➤</button>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="mem-modal" id="memModal">
+  <div class="mem-panel">
+    <div class="mem-head"><h3>🧠 Memory Bank</h3><button class="mem-close" id="memClose">✕</button></div>
+    <div class="mem-body">
+      <div class="mem-stat">
+        <div><div class="num" id="memCount">0</div><div class="lbl">Sessions</div></div>
+        <div><div class="num" id="memFacts">0</div><div class="lbl">Facts</div></div>
+        <div><div class="num" id="memSince">—</div><div class="lbl">Since</div></div>
+      </div>
+      <ul class="mem-list" id="memList"></ul>
+      <div class="mem-actions">
+        <button class="ok" id="memExport">⤓ Export</button>
+        <button class="danger" id="memForget">🗑 Forget All</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ============ MEMORY ============
+const MK='nova_mem_v3';
+const Mem={
+  d:{sessions:0,firstSeen:null,lastSeen:null,facts:[],topics:[],interactions:0,userName:null,notifLog:[]},
+  load(){try{const r=localStorage.getItem(MK);if(r)this.d=Object.assign(this.d,JSON.parse(r));}catch(e){}
+    if(!this.d.firstSeen)this.d.firstSeen=Date.now();
+    this.d.lastSeen=Date.now();this.d.sessions++;this.save();},
+  save(){try{localStorage.setItem(MK,JSON.stringify(this.d));}catch(e){}},
+  fact(k,v){const e=this.d.facts.find(f=>f.key===k);if(e){e.value=v;e.when=Date.now();}else{this.d.facts.unshift({key:k,value:v,when:Date.now()});if(this.d.facts.length>60)this.d.facts.pop();}this.save();},
+  get(k){const f=this.d.facts.find(f=>f.key===k);return f?f.value:null;},
+  topic(t){this.d.topics.unshift({text:String(t).slice(0,140),when:Date.now()});if(this.d.topics.length>20)this.d.topics.pop();this.save();},
+  clear(){this.d={sessions:1,firstSeen:Date.now(),lastSeen:Date.now(),facts:[],topics:[],interactions:0,userName:null,notifLog:[]};this.save();},
+  bump(){this.d.interactions++;this.d.lastSeen=Date.now();this.save();},
+  addNotif(e){this.d.notifLog=this.d.notifLog||[];this.d.notifLog.unshift(e);if(this.d.notifLog.length>60)this.d.notifLog.pop();this.save();}
+};
+Mem.load();
+
+// ============ FISH AUDIO TTS ============
+// 🔑 PASTE YOUR FISH AUDIO API KEY BELOW (keep the quotes)
+const FISH_API_KEY = 'sk-fish-GIr7pJq4R8igSVDccHcMXIoq2D83cohg0Ueuzeu_tEA';
+const FISH_VOICE_ID = '8d21b053e2804e2a890e1cf62f267b6f';
+let currentFishAudio = null;
+let currentFishAudioURL = null;
+
+async function speakFish(text){
+  if(!FISH_API_KEY || FISH_API_KEY.includes('PASTE_')) return false;
+  try{
+    const res = await fetch('https://api.fish.audio/v1/tts', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + FISH_API_KEY,
+        'Content-Type': 'application/json',
+        'model': 's2.1-pro-free'
+      },
+      body: JSON.stringify({
+        text: text.slice(0, 500),
+        reference_id: FISH_VOICE_ID,
+        format: 'mp3'
+      })
+    });
+    if(!res.ok){
+      console.log('Fish API error:', res.status);
+      return false;
+    }
+    const blob = await res.blob();
+    if(currentFishAudioURL) URL.revokeObjectURL(currentFishAudioURL);
+    currentFishAudioURL = URL.createObjectURL(blob);
+    currentFishAudio = new Audio(currentFishAudioURL);
+    currentFishAudio.onplay = ()=>{ state.speaking=true; setStatus('speaking','Speaking'); };
+    currentFishAudio.onended = ()=>{
+      state.speaking=false;
+      if(!state.listening&&!state.thinking&&!state.searching&&!state.rendering&&!state.launching&&!state.notifying)
+        setStatus('','Online');
+    };
+    currentFishAudio.onerror = ()=>{ state.speaking=false; setStatus('','Online'); };
+    await currentFishAudio.play();
+    return true;
+  }catch(e){
+    console.log('Fish failed:', e.message);
+    return false;
+  }
+}
+
+// ============ NOTIFICATIONS ============
+let notifReady=false;
+const Reminders=[];
+
+function vibrate(p){try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+
+async function askNotify(){
+  if(!('Notification' in window)){toast('⚠️','Not supported','','');return false;}
+  if(Notification.permission==='granted'){notifReady=true;return true;}
+  if(Notification.permission==='denied'){toast('🚫','Blocked','Enable in settings.','');return false;}
+  try{const p=await Notification.requestPermission();notifReady=p==='granted';return notifReady;}catch(e){return false;}
+}
+
+function fireNotify(title,body){
+  if('Notification' in window && Notification.permission==='granted'){
+    try{
+      const n=new Notification(title||'NOVA',{body:body||'',tag:'nova-'+Date.now(),renotify:true});
+      n.onclick=()=>{window.focus();n.close();};
+      setTimeout(()=>{try{n.close();}catch(e){}},10000);
+    }catch(e){}
+  }
+  vibrate([220,90,220,90,220]);
+  toast('🔔',title||'Notification',body||'','');
+  const fullText=(title?title.replace(/[🔔⏰⏱️]/g,'').trim():'')+(body?'. '+body:'');
+  const sayText=fullText.trim()||'Okay';
+  const wasOn=state.voiceOn;
+  state.voiceOn=true;
+  speak(sayText);
+  setTimeout(()=>{state.voiceOn=wasOn;},Math.min(4000,sayText.length*90));
+  Mem.addNotif({title:title||'Notification',body:body||'',when:Date.now()});
+  setStatus('notifying','Alert');
+  setTimeout(()=>{if(!state.speaking)setStatus('','Online');},1800);
+}
+
+function toast(icon,title,msg){
+  const w=document.getElementById('toastWrap');
+  const t=document.createElement('div');
+  t.className='toast';
+  t.innerHTML='<div class="t-ico">'+icon+'</div><div class="t-body"><div class="t-title">'+escapeHtml(title)+'</div>'+(msg?'<div class="t-msg">'+escapeHtml(msg)+'</div>':'')+'</div>';
+  t.onclick=()=>{t.classList.add('out');setTimeout(()=>t.remove(),400);};
+  w.appendChild(t);
+  setTimeout(()=>{if(t.parentNode){t.classList.add('out');setTimeout(()=>t.remove(),400);}},7000);
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+
+function scheduleReminder(text,delayMs){
+  const id='r'+Date.now()+Math.floor(Math.random()*1000);
+  const at=Date.now()+delayMs;
+  const timeout=setTimeout(()=>{
+    fireNotify('⏰ Reminder',text);
+    addReminderMsg(text);
+    const ix=Reminders.findIndex(x=>x.id===id);
+    if(ix>=0)Reminders.splice(ix,1);
+  },delayMs);
+  Reminders.push({id,title:text,at,timeout});
+  return{id,at};
+}
+function addReminderMsg(text){
+  const el=document.createElement('div');
+  el.className='msg bot reminder';
+  el.textContent='⏰ Reminder: '+text;
+  document.getElementById('messages').appendChild(el);
+  const m=document.getElementById('messages');m.scrollTop=m.scrollHeight;
+}
+function humanDelay(ms){
+  if(ms<60000)return Math.round(ms/1000)+' sec';
+  if(ms<3600000)return Math.round(ms/60000)+' min';
+  if(ms<86400000)return Math.round(ms/3600000)+' hr';
+  return Math.round(ms/86400000)+' days';
+}
+function parseDelay(str){
+  const s=str.toLowerCase();
+  const m=s.match(/(\d+(?:\.\d+)?)\s*(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d)\b/);
+  if(!m)return null;
+  const n=parseFloat(m[1]),u=m[2];
+  if(/^s(ec|econd)?/.test(u))return n*1000;
+  if(/^m(in|inute)?$/.test(u)||u==='m')return n*60000;
+  if(/^h(r|our)?/.test(u))return n*3600000;
+  if(/^d(ay)?/.test(u))return n*86400000;
+  return null;
+}
+
+// ============ ORB ============
+const cvs=document.getElementById('orb'),cx=cvs.getContext('2d');
+let W=0,H=0,DPR=Math.min(devicePixelRatio||1,2);
+function resize(){const r=cvs.getBoundingClientRect();W=r.width;H=r.height;cvs.width=W*DPR;cvs.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);
+const N=window.innerWidth<600?280:500,pts=[];
+for(let i=0;i<N;i++){const y=1-(i/(N-1))*2,r=Math.sqrt(Math.max(0,1-y*y)),th=i*2.399963229728653;pts.push({x:Math.cos(th)*r,y,z:Math.sin(th)*r});}
+let energy=0;
+function draw(t){
+  cx.clearRect(0,0,W,H);
+  const ccx=W/2,ccy=H/2,R=Math.min(W,H)*0.31*(1+energy*0.14);
+  const g=cx.createRadialGradient(ccx,ccy,0,ccx,ccy,R*2.7);
+  g.addColorStop(0,`rgba(34,211,238,${0.2+energy*0.3})`);
+  g.addColorStop(0.38,`rgba(139,92,246,${0.11+energy*0.18})`);
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  const ay=t*0.00026,ax=Math.sin(t*0.00014)*0.55;
+  const cy=Math.cos(ay),sy=Math.sin(ay),cx2=Math.cos(ax),sx=Math.sin(ax);
+  const jit=energy*0.16;
+  for(let i=0;i<N;i++){
+    const p=pts[i];
+    let x=p.x*cy-p.z*sy,z=p.x*sy+p.z*cy,y=p.y*cx2-z*sx;z=p.y*sx+z*cx2;
+    const rr=R*(1+(Math.random()-0.5)*jit),px=ccx+x*rr,py=ccy+y*rr;
+    const depth=(z+1.6)/2.6,size=0.55+depth*1.65,alpha=0.08+depth*0.82;
+    const mix=(y+1)/2,cr=Math.round(103+(192-103)*mix),cg=Math.round(232+(132-232)*mix),cb=Math.round(249+(252-249)*mix);
+    cx.beginPath();cx.arc(px,py,size,0,6.283);cx.fillStyle=`rgba(${cr},${cg},${cb},${alpha})`;cx.fill();
+  }
+  const cr=R*(0.3+energy*0.1),cored=cx.createRadialGradient(ccx,ccy,0,ccx,ccy,cr);
+  cored.addColorStop(0,`rgba(255,255,255,${0.75+energy*0.25})`);
+  cored.addColorStop(0.35,`rgba(103,232,249,${0.42+energy*0.35})`);
+  cored.addColorStop(1,'rgba(103,232,249,0)');
+  cx.fillStyle=cored;cx.beginPath();cx.arc(ccx,ccy,cr,0,6.283);cx.fill();
+}
+function loop(t){
+  const tgt=state.speaking?0.52+Math.sin(t*0.013)*0.26+Math.random()*0.16
+    :state.listening?0.44+Math.sin(t*0.009)*0.22+Math.random()*0.14
+    :state.searching?0.46+Math.sin(t*0.016)*0.22
+    :state.rendering?0.42+Math.sin(t*0.011)*0.22
+    :state.launching?0.5+Math.sin(t*0.014)*0.2
+    :state.notifying?0.58+Math.sin(t*0.022)*0.28
+    :state.thinking?0.34+Math.sin(t*0.02)*0.16
+    :0.08+Math.sin(t*0.0018)*0.045;
+  energy+=(tgt-energy)*0.075;draw(t);requestAnimationFrame(loop);
+}
+
+// ============ STATE ============
+const state={speaking:false,listening:false,thinking:false,searching:false,rendering:false,launching:false,notifying:false,voiceOn:true,busy:false};
+const $=id=>document.getElementById(id);
+const $msgs=$('messages'),$input=$('input'),$send=$('sendBtn'),$mic=$('micBtn'),$web=$('webBtn'),$status=$('status'),$statusText=$('statusText'),$voiceBtn=$('voiceToggle'),$clear=$('clearBtn'),$memBtn=$('memBtn'),$bellBtn=$('bellBtn'),$sugs=$('suggestions');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function setStatus(m,t){$status.className='status'+(m?' '+m:'');$statusText.textContent=t;}
+function down(){$msgs.scrollTop=$msgs.scrollHeight;}
+function addMsg(role,text){const e=document.createElement('div');e.className='msg '+role;e.textContent=text;$msgs.appendChild(e);down();return e;}
+function addTyping(){const e=document.createElement('div');e.className='msg bot';e.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';$msgs.appendChild(e);down();return e;}
+function addLoader(label,sub){const e=document.createElement('div');e.className='msg bot card-msg';const c=document.createElement('div');c.className='card';c.innerHTML=`<div class="loader"><div class="ico">🌐</div><div><div style="font-size:13px;color:#cfe6f7;font-weight:600">${label}</div><div style="font-size:11.5px;color:#7d9ab5;margin-top:3px">${sub||'Querying live sources…'}</div></div></div>`;e.appendChild(c);$msgs.appendChild(e);down();return e;}
+function stream(el,text,done){el.textContent='';const car=document.createElement('span');car.className='caret';el.appendChild(car);let i=0;(function s(){if(i>=text.length){car.remove();done&&done();return;}const ch=text.slice(i,i+2);i+=2;car.insertAdjacentText('beforebegin',ch);down();setTimeout(s,11);})();}
+
+// ============ MATH ============
+function calc(inp){
+  const s=inp.replace(/\s+/g,'');let i=0;const pk=()=>s[i];
+  function expr(){let v=term();while(pk()==='+'||pk()==='-'){const op=s[i++],r=term();v=op==='+'?v+r:v-r;}return v;}
+  function term(){let v=un();while(pk()==='*'||pk()==='/'||pk()==='%'){const op=s[i++],r=un();v=op==='*'?v*r:op==='/'?v/r:v%r;}return v;}
+  function un(){if(pk()==='-'){i++;return -un();}if(pk()==='+'){i++;return un();}return pw();}
+  function pw(){const b=at();if(pk()==='^'){i++;return Math.pow(b,un());}return b;}
+  function at(){if(pk()==='('){i++;const v=expr();if(pk()===')')i++;return v;}const st=i;while(i<s.length&&/[\d.]/.test(s[i]))i++;if(st===i)throw 0;return parseFloat(s.slice(st,i));}
+  const v=expr();if(i!==s.length||!isFinite(v))throw 0;return v;
+}
+
+// ============ LIVE DATA ============
+function fj(url,ms=9000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);return fetch(url,{signal:c.signal}).then(r=>{if(!r.ok)throw 0;return r.json();}).finally(()=>clearTimeout(t));}
+const strip=h=>String(h||'').replace(/<[^>]*>/g,'');
+const tr=(s,n)=>{s=String(s||'').replace(/\s+\n/g,'\n').trim();return s.length<=n?s:s.slice(0,n).replace(/\s+\S*$/,'')+'…';};
+async function wikiSum(q){const u='https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch='+encodeURIComponent(q)+'&gsrlimit=1&prop=pageimages|extracts|info&inprop=url&exintro=1&explaintext=1&pithumbsize=600';const j=await fj(u);const p=j&&j.query&&j.query.pages;if(!p)throw 0;const pg=Object.values(p)[0];if(!pg||!pg.title)throw 0;return{name:pg.title,sub:'Wikipedia',image:(pg.thumbnail&&pg.thumbnail.source)||'',about:tr(pg.extract,900),url:pg.fullurl||('https://en.wikipedia.org/wiki/'+encodeURIComponent(pg.title)),source:'wikipedia'};}
+async function wikiList(q,l=6){const u='https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch='+encodeURIComponent(q)+'&srlimit='+l;const j=await fj(u);return((j&&j.query&&j.query.search)||[]).map(h=>({title:h.title,snippet:tr(strip(h.snippet),190),url:'https://en.wikipedia.org/wiki/'+encodeURIComponent(h.title.replace(/ /g,'_'))}));}
+function nameMatch(q,n){const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();const Q=norm(q),N=norm(n);if(!Q||!N)return false;if(N.includes(Q)||Q.includes(N))return true;const qw=Q.split(' ').filter(w=>w.length>2),nw=N.split(' ');return qw.length>0&&qw.some(w=>nw.includes(w));}
+async function jikChar(q){const u='https://api.jikan.moe/v4/characters?q='+encodeURIComponent(q)+'&limit=3&order_by=favorites&sort=desc';const j=await fj(u);const l=(j&&j.data)||[];if(!l.length)throw 0;let b=l[0];for(const c of l)if(nameMatch(q,c.name)){b=c;break;}const about=tr(String(b.about||'').replace(/\(Source:.*?\)/gi,'').replace(/\n{3,}/g,'\n\n'),900);return{name:b.name,sub:[b.name_kanji,b.favorites?b.favorites.toLocaleString()+' ♥':''].filter(Boolean).join('  ·  ')||'MyAnimeList',image:(b.images&&b.images.jpg&&(b.images.jpg.image_url||b.images.jpg.small_image_url))||'',about,url:b.url||('https://myanimelist.net/character/'+b.mal_id),source:'jikan'};}
+async function jikAni(q){const u='https://api.jikan.moe/v4/anime?q='+encodeURIComponent(q)+'&limit=1&order_by=members&sort=desc';const j=await fj(u);const a=j&&j.data&&j.data[0];if(!a)throw 0;return{name:a.title_english||a.title,sub:[a.type,a.year||(a.aired&&a.aired.prop&&a.aired.prop.from&&a.aired.prop.from.year)].filter(Boolean).join('  ·  ')||'MyAnimeList',image:(a.images&&a.images.jpg&&a.images.jpg.large_image_url)||'',about:tr(a.synopsis,800),url:a.url,source:'jikan'};}
+async function lookup(q,forceAnime){
+  const animeish=forceAnime||/\b(anime|manga|waifu|husbando|shonen|shounen|seinen|isekai|otaku|character|villain|protagonist)\b/i.test(q);
+  const [j,w]=await Promise.allSettled([jikChar(q),wikiSum(q)]);
+  const J=j.status==='fulfilled'?j.value:null,W=w.status==='fulfilled'?w.value:null;
+  if(animeish){if(J)return J;if(W)return W;try{return await jikAni(q);}catch(e){}}
+  else{if(J&&nameMatch(q,J.name)&&J.about)return J;if(W)return W;if(J&&J.about)return J;try{return await jikAni(q);}catch(e){}}
+  return null;
+}
+
+// ============ CARDS ============
+function mkLink(l,h,alt){const a=document.createElement('a');a.textContent=l;a.href=h;a.target='_blank';a.rel='noopener noreferrer';if(alt)a.className=alt;return a;}
+const ddg=q=>'https://duckduckgo.com/?q='+encodeURIComponent(q);
+const goog=q=>'https://www.google.com/search?q='+encodeURIComponent(q);
+const bing=q=>'https://www.bing.com/search?q='+encodeURIComponent(q);
+function cardTop(kick,badgeT,badgeC){const t=document.createElement('div');t.className='card-top';const k=document.createElement('span');k.className='kicker';k.textContent=kick;const b=document.createElement('span');b.className='badge '+(badgeC||'');b.textContent=badgeT;t.appendChild(k);t.appendChild(b);return t;}
+function cardWrap(){const w=document.createElement('div');w.className='msg bot card-msg';const c=document.createElement('div');c.className='card';w.appendChild(c);$msgs.appendChild(w);return{c,w};}
+
+function renderProfile(d){
+  const {c}=cardWrap();
+  c.appendChild(cardTop(d.source==='jikan'?'Character Profile':'Encyclopedia Entry',d.source==='jikan'?'MyAnimeList':'Wikipedia',d.source==='jikan'?'':'wiki'));
+  const h=document.createElement('div');h.className='card-hero';
+  if(d.image){const img=document.createElement('img');img.className='card-img';img.src=d.image;img.alt=d.name;img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>img.remove();h.appendChild(img);}
+  const b=document.createElement('div');b.className='card-body';
+  const t=document.createElement('h3');t.className='card-name';t.textContent=d.name;b.appendChild(t);
+  if(d.sub){const s=document.createElement('div');s.className='card-sub';s.textContent=d.sub;b.appendChild(s);}
+  if(d.about){const p=document.createElement('p');p.className='card-text';p.textContent=d.about;b.appendChild(p);}
+  const l=document.createElement('div');l.className='card-links';
+  if(d.url)l.appendChild(mkLink('Open ↗',d.url));
+  l.appendChild(mkLink('Google ↗',goog(d.name+(d.source==='jikan'?' anime character':''))));
+  l.appendChild(mkLink('DuckDuckGo ↗',ddg(d.name),'alt'));
+  b.appendChild(l);h.appendChild(b);c.appendChild(h);down();
+  return d.name+'. '+tr(d.about||'',320);
+}
+function renderSearch(q,list,sum){
+  const {c}=cardWrap();
+  c.appendChild(cardTop('Web — "'+tr(q,36)+'"','Live','web'));
+  if(sum){
+    const h=document.createElement('div');h.className='card-hero';
+    if(sum.image){const i=document.createElement('img');i.className='card-img';i.src=sum.image;i.alt=sum.name;i.loading='lazy';i.referrerPolicy='no-referrer';i.onerror=()=>i.remove();h.appendChild(i);}
+    const b=document.createElement('div');b.className='card-body';
+    const t=document.createElement('h3');t.className='card-name';t.textContent=sum.name;b.appendChild(t);
+    if(sum.about){const p=document.createElement('p');p.className='card-text';p.textContent=sum.about;b.appendChild(p);}
+    h.appendChild(b);c.appendChild(h);
+  }
+  const body=document.createElement('div');body.className='card-body';
+  if(list&&list.length){
+    const ul=document.createElement('ul');ul.className='results';
+    list.forEach(r=>{const li=document.createElement('li');const a=document.createElement('a');a.href=r.url;a.target='_blank';a.rel='noopener';const ti=document.createElement('div');ti.className='r-title';ti.textContent=r.title;const sn=document.createElement('div');sn.className='r-snip';sn.textContent=r.snippet;a.appendChild(ti);a.appendChild(sn);li.appendChild(a);ul.appendChild(li);});
+    body.appendChild(ul);
+  } else if(!sum){const p=document.createElement('p');p.className='card-text';p.textContent="Couldn't find a direct match. Try the search links below.";body.appendChild(p);}
+  const l=document.createElement('div');l.className='card-links';
+  l.appendChild(mkLink('Google ↗',goog(q)));l.appendChild(mkLink('DuckDuckGo ↗',ddg(q),'alt'));l.appendChild(mkLink('Bing ↗',bing(q)));
+  body.appendChild(l);c.appendChild(body);down();
+  return sum?(sum.name+'. '+tr(sum.about||'',300)):('Here are web results for '+q);
+}
+
+// ============ GLOBE ============
+let threeP=null;
+function ensureThree(){if(window.THREE)return Promise.resolve();if(threeP)return threeP;threeP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=()=>res();s.onerror=()=>rej();document.head.appendChild(s);});return threeP;}
+function procEarth(THREE){const c=document.createElement('canvas');c.width=1024;c.height=512;const g=c.getContext('2d');const oc=g.createLinearGradient(0,0,0,512);oc.addColorStop(0,'#082347');oc.addColorStop(.5,'#1150a0');oc.addColorStop(1,'#082347');g.fillStyle=oc;g.fillRect(0,0,1024,512);const blob=(x,y,n,s,h)=>{for(let i=0;i<n;i++){g.beginPath();g.arc(x+(Math.random()-.5)*s,y+(Math.random()-.5)*s*.55,14+Math.random()*48,0,6.283);g.fillStyle=`hsl(${h+Math.random()*25-12},${40+Math.random()*20}%,${25+Math.random()*18}%)`;g.fill();}};blob(180,180,40,170,105);blob(240,330,25,120,100);blob(520,150,30,140,110);blob(540,280,35,150,95);blob(720,170,40,200,100);blob(820,380,22,110,100);const it=g.createLinearGradient(0,0,0,60);it.addColorStop(0,'rgba(255,255,255,.85)');it.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=it;g.fillRect(0,0,1024,60);const ib=g.createLinearGradient(0,512,0,452);ib.addColorStop(0,'rgba(255,255,255,.9)');ib.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=ib;g.fillRect(0,452,1024,60);for(let i=0;i<400;i++){g.beginPath();g.arc(Math.random()*1024,Math.random()*512,8+Math.random()*40,0,6.283);g.fillStyle=`rgba(255,255,255,${Math.random()*.1})`;g.fill();}const t=new THREE.CanvasTexture(c);t.anisotropy=8;return t;}
+async function renderGlobe(){
+  state.rendering=true;setStatus('rendering','Rendering Earth');
+  const {c}=cardWrap();
+  c.appendChild(cardTop('3D Earth · Interactive','WebGL','globe'));
+  const scene=document.createElement('div');scene.className='globe-scene';
+  const gc=document.createElement('canvas');scene.appendChild(gc);
+  const hint=document.createElement('div');hint.className='globe-hint';hint.textContent='Drag · Pinch to zoom';scene.appendChild(hint);
+  c.appendChild(scene);down();
+  try{await ensureThree();}catch(e){state.rendering=false;finishTurn();return"I couldn't load the 3D engine.";}
+  const THREE=window.THREE;
+  const rect=scene.getBoundingClientRect(),CW=Math.max(rect.width,200),CH=Math.max(rect.height,200);
+  const ren=new THREE.WebGLRenderer({canvas:gc,antialias:true,alpha:true});
+  ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(CW,CH,false);
+  const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,CW/CH,.1,200);cam.position.z=3.3;
+  const em=new THREE.MeshPhongMaterial({color:0xffffff,specular:0x335588,shininess:12,emissive:0x0a1730,emissiveIntensity:.35});
+  const earth=new THREE.Mesh(new THREE.SphereGeometry(1,64,64),em);earth.rotation.z=.41;sc.add(earth);
+  const tl=new THREE.TextureLoader();tl.setCrossOrigin('anonymous');
+  tl.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',t=>{em.map=t;em.needsUpdate=true;},undefined,()=>{em.map=procEarth(THREE);em.needsUpdate=true;});
+  const am=new THREE.ShaderMaterial({vertexShader:`varying vec3 vN;varying vec3 vP;void main(){vN=normalize(normalMatrix*normal);vP=(modelViewMatrix*vec4(position,1.0)).xyz;gl_Position=projectionMatrix*vec4(vP,1.0);}`,fragmentShader:`varying vec3 vN;varying vec3 vP;void main(){vec3 v=normalize(-vP);float r=1.0-abs(dot(v,vN));float i=pow(r,2.6);gl_FragColor=vec4(.45,.85,1.0,1.0)*i*1.6;}`,blending:THREE.AdditiveBlending,side:THREE.BackSide,transparent:true,depthWrite:false});
+  sc.add(new THREE.Mesh(new THREE.SphereGeometry(1.09,64,64),am));
+  const cl=new THREE.Mesh(new THREE.SphereGeometry(1.005,64,64),new THREE.MeshPhongMaterial({color:0xffffff,transparent:true,opacity:.1,depthWrite:false}));cl.rotation.z=.41;sc.add(cl);
+  sc.add(new THREE.AmbientLight(0x334466,1.05));
+  const sun=new THREE.DirectionalLight(0xfff6e5,1.55);sun.position.set(5,2.5,4.5);sc.add(sun);
+  const rl=new THREE.PointLight(0x66ccff,1.4,12);rl.position.set(-3.5,-2,2.5);sc.add(rl);
+  const sg=new THREE.BufferGeometry(),sa=[];
+  for(let i=0;i<800;i++){const r=7+Math.random()*12,th=Math.random()*6.283,ph=Math.acos(2*Math.random()-1);sa.push(r*Math.sin(ph)*Math.cos(th),r*Math.sin(ph)*Math.sin(th),r*Math.cos(ph));}
+  sg.setAttribute('position',new THREE.Float32BufferAttribute(sa,3));
+  const stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.035,transparent:true,opacity:.9}));sc.add(stars);
+  let drag=false,lx=0,ly=0,vy=.0022,vx=0,zoom=3.3;
+  const sd=e=>{drag=true;const t=e.touches?e.touches[0]:e;lx=t.clientX;ly=t.clientY;};
+  const md=e=>{if(!drag)return;const t=e.touches?e.touches[0]:e;const dx=t.clientX-lx,dy=t.clientY-ly;lx=t.clientX;ly=t.clientY;vy=dx*.0055;vx=dy*.0055;earth.rotation.y+=vy;cl.rotation.y+=vy*1.05;earth.rotation.x=Math.max(-1.2,Math.min(1.2,earth.rotation.x+vx));cl.rotation.x=earth.rotation.x;};
+  const ed=()=>{drag=false;};
+  gc.addEventListener('mousedown',sd);addEventListener('mousemove',md);addEventListener('mouseup',ed);
+  gc.addEventListener('touchstart',sd,{passive:true});gc.addEventListener('touchmove',md,{passive:true});gc.addEventListener('touchend',ed,{passive:true});
+  gc.addEventListener('wheel',e=>{e.preventDefault();zoom+=e.deltaY*.0022;zoom=Math.max(2.1,Math.min(5.5,zoom));cam.position.z=zoom;},{passive:false});
+  new ResizeObserver(()=>{const r=scene.getBoundingClientRect();if(!r.width||!r.height)return;ren.setSize(r.width,r.height,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix();}).observe(scene);
+  (function tick(){requestAnimationFrame(tick);if(!drag){vy*=.985;vx*=.985;earth.rotation.y+=.0018+vy;cl.rotation.y+=.002+vy*1.08;earth.rotation.x+=vx*.5;cl.rotation.x=earth.rotation.x;}stars.rotation.y+=.00016;ren.render(sc,cam);})();
+  state.rendering=false;finishTurn();speak("Here's an interactive 3D Earth.");
+  return null;
+}
+
+// ============ COIN ============
+function renderCoin(){
+  state.rendering=true;setStatus('rendering','Flipping');
+  const res=Math.random()<.5?'HEADS':'TAILS';
+  const spins=7+Math.floor(Math.random()*5),endDeg=spins*360+(res==='TAILS'?180:0),dur=2400+Math.random()*400;
+  const {c}=cardWrap();c.appendChild(cardTop('Coin Flip','3D','coin'));
+  const sc=document.createElement('div');sc.className='coin-scene';
+  const gr=document.createElement('div');gr.className='coin-ground';gr.style.animationDuration=dur+'ms';sc.appendChild(gr);
+  const cw=document.createElement('div');cw.className='coin-wrap';cw.style.animationDuration=dur+'ms';
+  const co=document.createElement('div');co.className='coin-3d';
+  const fr=document.createElement('div');fr.className='coin-face front';fr.innerHTML='<span class="star">★ NOVA ★</span>H<span class="star b">★ ★ ★</span>';
+  const bk=document.createElement('div');bk.className='coin-face back';bk.innerHTML='<span class="star">★ NOVA ★</span>T<span class="star b">★ ★ ★</span>';
+  co.appendChild(fr);co.appendChild(bk);cw.appendChild(co);sc.appendChild(cw);
+  const rl=document.createElement('div');rl.className='coin-result';rl.textContent=res;sc.appendChild(rl);
+  c.appendChild(sc);down();
+  requestAnimationFrame(()=>{co.animate([{transform:'rotateX(0) rotateY(0)'},{transform:`rotateX(${endDeg}deg) rotateY(${180*(Math.random()<.5?1:-1)}deg)`}],{duration:dur,easing:'cubic-bezier(.15,.75,.25,1)',fill:'forwards'});});
+  setTimeout(()=>{rl.classList.add('show');state.rendering=false;finishTurn();speak("It's "+res.toLowerCase()+"!");},dur+100);
+  return null;
+}
+
+// ============ MATH CARD ============
+function renderMath(expr,result){
+  state.rendering=true;setStatus('rendering','Calculating');
+  const {c}=cardWrap();c.appendChild(cardTop('Calculation','Solved','calc'));
+  const sc=document.createElement('div');sc.className='calc-scene';
+  const ex=document.createElement('div');ex.className='calc-expr';
+  const eq=document.createElement('div');eq.className='calc-eq';eq.textContent='=';
+  const rw=document.createElement('div');const re=document.createElement('div');re.className='calc-result';rw.appendChild(re);
+  sc.appendChild(ex);sc.appendChild(eq);sc.appendChild(rw);
+  const tg=document.createElement('div');tg.className='calc-tag';tg.textContent='NOVA Math Engine';tg.style.cssText='display:inline-block;margin-top:14px;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:#4d6d8c';
+  sc.appendChild(tg);c.appendChild(sc);down();
+  const toks=[];let buf='',bt='';const flush=()=>{if(buf){toks.push({text:buf,type:bt});buf='';}};
+  for(const ch of expr){let t;if(/[\d.]/.test(ch))t='num';else if(/[()]/.test(ch))t='br';else if(/\s/.test(ch))t='sp';else t='op';if(t==='sp'){flush();toks.push({text:ch,type:'sp'});continue;}if(t!==bt){flush();bt=t;}buf+=ch;}
+  flush();
+  let ti=0,ci=0;
+  (function step(){
+    if(ti>=toks.length){
+      setTimeout(()=>{eq.classList.add('show');setTimeout(()=>{
+        re.textContent=String(result);re.classList.add('show');
+        for(let i=0;i<24;i++){const p=document.createElement('div');p.className='burst';const a=(i/24)*6.283+Math.random()*.3,d=60+Math.random()*100;p.style.setProperty('--tx',(Math.cos(a)*d).toFixed(1)+'px');p.style.setProperty('--ty',(Math.sin(a)*d).toFixed(1)+'px');p.style.animationDelay=(Math.random()*.12)+'s';rw.appendChild(p);setTimeout(()=>p.remove(),1400);}
+        state.rendering=false;finishTurn();
+        speak(expr.replace(/\*/g,' times ').replace(/\//g,' divided by ').replace(/\^/g,' to the power of ')+' equals '+result);
+      },320);},320);return;
+    }
+    const tk=toks[ti];
+    if(ci===0){const s=document.createElement('span');s.className='tok-'+tk.type;ex.appendChild(s);}
+    const s=ex.lastChild;s.textContent+=tk.text[ci];ci++;
+    if(ci>=tk.text.length){ti++;ci=0;}
+    down();setTimeout(step,55);
+  })();
+  return null;
+}
+
+// ============ APPS ============
+const APPS={
+  google:{name:'Google',icon:'🔍',url:'https://www.google.com',color:'launch'},
+  youtube:{name:'YouTube',icon:'▶️',url:'https://www.youtube.com',color:'launch'},
+  tiktok:{name:'TikTok',icon:'🎵',url:'https://www.tiktok.com',color:'launch'},
+  instagram:{name:'Instagram',icon:'📷',url:'https://www.instagram.com',color:'launch'},
+  twitter:{name:'Twitter/X',icon:'𝕏',url:'https://twitter.com',color:'launch'},
+  x:{name:'Twitter/X',icon:'𝕏',url:'https://twitter.com',color:'launch'},
+  facebook:{name:'Facebook',icon:'📘',url:'https://www.facebook.com',color:'launch'},
+  reddit:{name:'Reddit',icon:'👽',url:'https://www.reddit.com',color:'launch'},
+  github:{name:'GitHub',icon:'🐙',url:'https://github.com',color:'launch'},
+  wikipedia:{name:'Wikipedia',icon:'📚',url:'https://en.wikipedia.org',color:'launch'},
+  netflix:{name:'Netflix',icon:'🎬',url:'https://www.netflix.com',color:'launch'},
+  twitch:{name:'Twitch',icon:'🎮',url:'https://www.twitch.tv',color:'launch'},
+  discord:{name:'Discord',icon:'💬',url:'https://discord.com/app',color:'launch'},
+  spotify:{name:'Spotify',icon:'🎧',url:'https://open.spotify.com',color:'music'},
+  soundcloud:{name:'SoundCloud',icon:'🔊',url:'https://soundcloud.com',color:'music'},
+  amazon:{name:'Amazon',icon:'📦',url:'https://www.amazon.com',color:'launch'},
+  gmail:{name:'Gmail',icon:'✉️',url:'https://mail.google.com',color:'launch'},
+  maps:{name:'Google Maps',icon:'🗺️',url:'https://maps.google.com',color:'launch'}
+};
+function findApp(key){
+  if(!key)return null;
+  if(APPS[key])return{id:key,...APPS[key]};
+  for(const id in APPS)if(key.includes(id)||id.includes(key.split(' ')[0]))return{id,...APPS[id]};
+  for(const id in APPS)if(key.includes(APPS[id].name.toLowerCase().split('/')[0].trim()))return{id,...APPS[id]};
+  return null;
+}
+function renderLaunch(app){
+  state.launching=true;setStatus('launching','Opening '+app.name);
+  const {c}=cardWrap();c.appendChild(cardTop('Launching App',app.name,'app'));
+  const sc=document.createElement('div');sc.className='launch-scene';
+  const ic=document.createElement('div');ic.className='launch-icon';ic.textContent=app.icon;sc.appendChild(ic);
+  const t=document.createElement('h3');t.className='launch-title';t.textContent='Opening '+app.name;sc.appendChild(t);
+  const s=document.createElement('p');s.className='launch-sub';s.textContent='Your browser should open it in a moment…';sc.appendChild(s);
+  const btn=document.createElement('a');btn.className='launch-btn'+(app.color==='music'?' music':'');btn.href=app.url;btn.target='_blank';btn.rel='noopener';btn.innerHTML=app.icon+'  Open '+app.name;sc.appendChild(btn);
+  const n=document.createElement('div');n.className='launch-note';n.textContent='Blocked? Click the button above.';sc.appendChild(n);
+  c.appendChild(sc);down();
+  setTimeout(()=>{try{window.open(app.url,'_blank','noopener');}catch(e){}state.launching=false;finishTurn();speak('Opening '+app.name+'.');},700);
+  return null;
+}
+
+// ============ MUSIC ============
+function buildMusicUrl(p,q){const Q=encodeURIComponent(q||'');
+  if(p==='youtube')return Q?'https://www.youtube.com/results?search_query='+Q:'https://www.youtube.com';
+  if(p==='spotify')return Q?'https://open.spotify.com/search/'+Q:'https://open.spotify.com';
+  if(p==='tiktok')return Q?'https://www.tiktok.com/search?q='+Q:'https://www.tiktok.com';
+  if(p==='soundcloud')return Q?'https://soundcloud.com/search?q='+Q:'https://soundcloud.com';
+  return 'https://www.youtube.com/results?search_query='+Q;
+}
+function buildDeep(p,q){const Q=encodeURIComponent(q||'');
+  if(p==='tiktok')return Q?'snssdk1233://search?keyword='+Q:'snssdk1233://';
+  if(p==='youtube')return Q?'vnd.youtube://results?search_query='+Q:'vnd.youtube://';
+  if(p==='spotify')return Q?'spotify:search:'+Q:'spotify:';
+  if(p==='soundcloud')return Q?'soundcloud://search?q='+Q:'soundcloud://';
+  return null;
+}
+function isMobile(){return /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|Opera Mini/i.test(navigator.userAgent)||('ontouchstart' in window&&innerWidth<900);}
+
+async function renderMusic(platform,query){
+  state.launching=true;
+  const meta=APPS[platform]||APPS.youtube;
+  setStatus('launching','Opening '+meta.name);
+  const url=buildMusicUrl(platform,query);
+  const deep=buildDeep(platform,query);
+  const mobile=isMobile();
+  const {c}=cardWrap();
+  c.appendChild(cardTop('Now Playing · '+meta.name,'Music','music'));
+  const sc=document.createElement('div');sc.className='ts-scene';
+  const logo=document.createElement('div');logo.className='ts-logo';
+  const li=document.createElement('div');li.className='ts-logo-icon';li.textContent=meta.icon;
+  const ln=document.createElement('div');ln.className='ts-logo-name';ln.textContent=meta.name;
+  logo.appendChild(li);logo.appendChild(ln);sc.appendChild(logo);
+  const bar=document.createElement('div');bar.className='ts-bar typing';
+  const bi=document.createElement('span');bi.className='ts-icon';bi.textContent='🔍';
+  const bt=document.createElement('span');bt.className='ts-text';
+  if(!query)bt.innerHTML='<span class="ts-placeholder">Search '+meta.name+'…</span>';
+  const bc=document.createElement('span');bc.className='ts-caret';
+  bar.appendChild(bi);bar.appendChild(bt);bar.appendChild(bc);sc.appendChild(bar);
+  const meta2=document.createElement('div');meta2.className='ts-meta';meta2.textContent=query?'Typing your search…':'Opening '+meta.name+'…';sc.appendChild(meta2);
+  const st=document.createElement('div');st.className='ts-status';sc.appendChild(st);
+  const acts=document.createElement('div');acts.className='ts-actions';sc.appendChild(acts);
+  c.appendChild(sc);
+  const mm=document.createElement('div');mm.className='music-meta';
+  const mi=document.createElement('div');mi.className='music-icon';mi.textContent=meta.icon;
+  const mf=document.createElement('div');mf.className='music-info';
+  const mt=document.createElement('div');mt.className='music-title';mt.textContent=query||'Discover something new';
+  const mp=document.createElement('div');mp.className='music-platform';mp.textContent=meta.name;
+  mf.appendChild(mt);mf.appendChild(mp);mm.appendChild(mi);mm.appendChild(mf);c.appendChild(mm);
+  down();
+  if(query){
+    bt.textContent='';
+    await new Promise(res=>{let i=0;(function s(){if(i>=query.length){bc.style.animation='none';bc.style.opacity='.4';setTimeout(res,340);return;}bt.textContent+=query[i++];down();setTimeout(s,55+Math.random()*55);})();});
+  } else await sleep(500);
+  bar.classList.remove('typing');bar.classList.add('done');
+  st.innerHTML='<span class="spinner"></span><span>Opening '+meta.name+(mobile&&deep?' app':'')+'…</span>';
+  st.classList.add('show');down();
+  let opened=false,vh=null;
+  if(mobile&&deep){
+    vh=()=>{if(document.hidden)opened=true;};
+    document.addEventListener('visibilitychange',vh);
+    try{const a=document.createElement('a');a.href=deep;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),100);}catch(e){}
+    await sleep(1500);
+  } else await sleep(600);
+  if(vh)document.removeEventListener('visibilitychange',vh);
+  if(opened){st.innerHTML='<span>✓ Opened in '+meta.name+' app</span>';st.classList.add('success');}
+  else{
+    st.innerHTML='<span>'+(mobile&&deep?'→ App not found, opening website…':'→ Opening website…')+'</span>';
+    await sleep(400);
+    try{window.open(url,'_blank','noopener');}catch(e){}
+    st.innerHTML='<span>✓ Opened '+meta.name+' in your browser</span>';st.classList.add('success');
+  }
+  if(deep)acts.appendChild(mkLink('📱 Open in App',deep,''));
+  acts.appendChild(mkLink('▶ Open '+meta.name,url,''));
+  if(platform!=='youtube')acts.appendChild(mkLink('Also YouTube ↗',buildMusicUrl('youtube',query),'alt'));
+  acts.classList.add('show');down();
+  state.launching=false;finishTurn();
+  speak('Playing '+(query?query+' on ':'music on ')+meta.name+'.');
+  return null;
+}
+
+// ============ BELL CARD ============
+function renderBellCard(){
+  const {c}=cardWrap();c.appendChild(cardTop('Notifications','Enable','bell'));
+  const sc=document.createElement('div');sc.className='bell-scene';
+  const ic=document.createElement('div');ic.className='bell-icon';ic.textContent='🔔';sc.appendChild(ic);
+  const t=document.createElement('div');t.className='bell-title';t.textContent='Turn on Alerts';sc.appendChild(t);
+  const s=document.createElement('div');s.className='bell-sub';s.textContent='Get notified & hear NOVA read the alert aloud.';sc.appendChild(s);
+  const btn=document.createElement('button');btn.className='bell-btn';btn.textContent='🔔 Enable Alerts';
+  if(notifReady||('Notification' in window&&Notification.permission==='granted')){btn.textContent='✓ Alerts Enabled';btn.disabled=true;}
+  btn.onclick=async()=>{const ok=await askNotify();if(ok){btn.textContent='✓ Alerts Enabled';btn.disabled=true;$bellBtn.classList.add('on');$bellBtn.textContent='🔔 On';addMsg('bot','✓ Alerts enabled! Try: "remind me in 30 seconds to stretch"');speak('Alerts enabled.');}};
+  sc.appendChild(btn);c.appendChild(sc);down();
+  return null;
+}
+
+// ============ NOTIF LOG CARD ============
+function renderNotifLog(){
+  const log=(Mem.d.notifLog||[]);
+  const {c}=cardWrap();
+  c.appendChild(cardTop('Notification History','🔔 '+log.length,'bell'));
+  const body=document.createElement('div');body.className='card-body';
+  if(!log.length){
+    const p=document.createElement('p');p.className='card-text';
+    p.textContent="No notifications yet. Try \"remind me in 30 seconds to stretch\".";
+    body.appendChild(p);
+  } else {
+    const ul=document.createElement('ul');ul.className='results';
+    log.slice(0,30).forEach(item=>{
+      const li=document.createElement('li');const a=document.createElement('a');
+      a.href='#';a.onclick=(e)=>{e.preventDefault();speak((item.title||'')+'. '+(item.body||''));};
+      const t=document.createElement('div');t.className='r-title';t.textContent='🔔 '+item.title;
+      const s=document.createElement('div');s.className='r-snip';
+      const dt=new Date(item.when);
+      s.textContent=(item.body?item.body+' · ':'')+dt.toLocaleString();
+      a.appendChild(t);a.appendChild(s);li.appendChild(a);ul.appendChild(li);
+    });
+    body.appendChild(ul);
+    const p=document.createElement('p');p.className='card-text';p.style.marginTop='12px';p.style.fontSize='11.5px';
+    p.textContent='Tap any notification to hear it again.';
+    body.appendChild(p);
+  }
+  c.appendChild(body);down();
+  return log.length?('You have '+log.length+' notification'+(log.length>1?'s':'')+' in your history.'):"You have no notifications yet.";
+}
+
+// ============ MEMORY UI ============
+const $mm=$('memModal'),$mc=$('memClose'),$ml=$('memList'),$mcCount=$('memCount'),$mcFacts=$('memFacts'),$mcSince=$('memSince'),$mcForget=$('memForget'),$mcExport=$('memExport');
+function hTime(ms){const d=Date.now()-ms;if(d<6e4)return'just now';if(d<36e5)return Math.floor(d/6e4)+'m ago';if(d<864e5)return Math.floor(d/36e5)+'h ago';return Math.floor(d/864e5)+'d ago';}
+function renderMem(){
+  $mcCount.textContent=Mem.d.sessions;$mcFacts.textContent=Mem.d.facts.length;
+  $mcSince.textContent=Mem.d.firstSeen?new Date(Mem.d.firstSeen).toLocaleDateString([],{month:'short',day:'numeric'}):'—';
+  $ml.innerHTML='';
+  if(!Mem.d.facts.length&&!Mem.d.topics.length){const e=document.createElement('div');e.className='mem-empty';e.innerHTML='Nothing saved yet.<br>Try "my name is Alex" or "remember I love ramen".';$ml.appendChild(e);return;}
+  Mem.d.facts.slice(0,30).forEach(f=>{const li=document.createElement('li');const s=document.createElement('span');s.innerHTML='<b style="color:#fcd34d">'+escapeHtml(f.key)+'</b> · '+escapeHtml(f.value);const w=document.createElement('span');w.className='mem-when';w.textContent=hTime(f.when);li.appendChild(s);li.appendChild(w);$ml.appendChild(li);});
+  if(Mem.d.topics.length&&!Mem.d.facts.length){Mem.d.topics.slice(0,12).forEach(t=>{const li=document.createElement('li');const s=document.createElement('span');s.textContent=t.text;const w=document.createElement('span');w.className='mem-when';w.textContent=hTime(t.when);li.appendChild(s);li.appendChild(w);$ml.appendChild(li);});}
+}
+$memBtn.onclick=()=>{renderMem();$mm.classList.add('show');};
+$mc.onclick=()=>$mm.classList.remove('show');
+$mm.onclick=e=>{if(e.target===$mm)$mm.classList.remove('show');};
+$mcForget.onclick=()=>{if(confirm('Forget all memories?')){Mem.clear();renderMem();}};
+$mcExport.onclick=()=>{const b=new Blob([JSON.stringify(Mem.d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='nova-memory.json';a.click();};
+
+// ============ BRAIN ============
+const JOKES=["Why did the neural network go to therapy?\nIt had too many hidden layers. 🧠","I told my computer I needed a break…\nNow it won't stop sending me KitKat ads.","Why do programmers prefer dark mode?\nBecause light attracts bugs. 🐛","There are 10 kinds of people:\nthose who understand binary and those who don't.","I would tell you a UDP joke, but you might not get it.","Why was the JavaScript developer sad?\nBecause he didn't know how to null his feelings."];
+const FACTS=["A teaspoon of neutron-star material weighs about 6 billion tons. 🚀","Octopuses have three hearts and blue blood. 🐙","The first computer 'bug' was a literal moth, found in 1947. 🦋","Honey never spoils — 3,000-year-old jars are still edible. 🍯","Sunlight takes about 8 minutes 20 seconds to reach Earth. ☀️","There are more possible chess games than atoms in the universe. ♟️"];
+const QUOTES=["“The best way to predict the future is to invent it.” — Alan Kay","“Simplicity is the ultimate sophistication.” — Leonardo da Vinci","“Whether you think you can or you think you can't, you're right.” — Henry Ford","“First, solve the problem. Then, write the code.” — John Johnson","“Stay hungry, stay foolish.” — Steve Jobs"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+function think(raw){
+  const original=raw.trim();
+  const q=original.toLowerCase().replace(/[?!.]+$/,'').trim();
+  let m;
+
+  // NOTIFICATION HISTORY
+  if(/^(?:show|read|list|check)\s+(?:my\s+)?(?:notifications?|alerts?|notif\s+log|notification\s+history)\b/.test(q) ||
+     /^(?:notification|notif)\s+(?:log|history|list)\b/.test(q) ||
+     /what\s+notifications?\s+(?:did\s+i\s+get|have\s+i\s+gotten)/.test(q))
+    return { action:'notiflog' };
+  if(/^(?:clear|delete|wipe)\s+(?:my\s+)?(?:notifications?|notif\s+log|notification\s+history)\b/.test(q)){
+    Mem.d.notifLog=[];Mem.save();
+    return "🗑 Cleared your notification history.";
+  }
+
+  // REMINDERS
+  if((m=q.match(/^(?:set\s+(?:a\s+)?)?remind(?:er)?\s+(?:me\s+)?(?:in\s+)?(.+?)\s+(?:to|that|about)\s+(.+)$/))||
+     (m=q.match(/^(?:please\s+)?remind\s+me\s+to\s+(.+?)\s+in\s+(.+)$/))){
+    let delayStr,task;
+    if(/^(?:set\s+(?:a\s+)?)?remind/.test(m[0])&&m[2].match(/\d+\s*(?:s|m|h|sec|min|hour|day)/i)){delayStr=m[1];task=m[2];}
+    else{task=m[1];delayStr=m[2];}
+    const ms=parseDelay(delayStr);
+    if(!ms)return"I couldn't understand the time. Try \"remind me in 5 minutes to drink water\".";
+    if(ms<1000)return"That's too short — try at least 5 seconds.";
+    const {at}=scheduleReminder(task,ms);
+    const when=new Date(at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    speak('Okay');
+    return"⏰ Got it — I'll remind you to \""+task+"\" in "+humanDelay(ms)+".\n\n(At "+when+")";
+  }
+  if((m=q.match(/^(?:set\s+(?:a\s+)?)?timer\s+(?:for\s+)?(.+)$/))){
+    const ms=parseDelay(m[1]);
+    if(!ms)return"I couldn't understand the duration. Try \"set a timer for 30 seconds\".";
+    if(ms<1000)return"That's too short — try at least 5 seconds.";
+    const {at}=scheduleReminder('Timer finished!',ms);
+    const when=new Date(at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    speak('Okay');
+    return"⏱️ Timer set for "+humanDelay(ms)+".\n\n(At "+when+")";
+  }
+  if(/^(?:please\s+)?remind\s+me\s+to\s+(.+)$/.test(q)){
+    const task=q.replace(/^(?:please\s+)?remind\s+me\s+to\s+/,'').trim();
+    scheduleReminder(task,5*60000);
+    return"⏰ I'll remind you to \""+task+"\" in 5 minutes.";
+  }
+  if(/^(?:please\s+)?(?:enable|turn on|allow|activate)\s+(?:notifications?|alerts?|the bell)\b/.test(q)){
+    askNotify().then(ok=>{if(ok){$bellBtn.classList.add('on');$bellBtn.textContent='🔔 On';addMsg('bot','✓ Alerts enabled.');}});
+    return"🔔 Asking for permission now — tap Allow when the popup appears.";
+  }
+  if(/^(?:please\s+)?(?:test|try)\s+(?:a\s+)?notif/.test(q)){
+    if('Notification' in window && Notification.permission==='granted'){fireNotify('Test Alert','NOVA notification test.');return"🔔 Sent!";}
+    return"Alerts aren't enabled yet. Say \"enable notifications\" first.";
+  }
+  if(/cancel.*(?:timer|reminder)|stop.*(?:timer|reminder)|clear.*reminders/.test(q)){
+    const count=Reminders.length;Reminders.forEach(r=>clearTimeout(r.timeout));Reminders.length=0;
+    return count?("🗑 Cancelled "+count+" pending reminder(s)."):"No active reminders.";
+  }
+  if(/how many reminders|list reminders|my reminders/.test(q)){
+    if(!Reminders.length)return"No active reminders.";
+    let o="📋 Active reminders:\n";Reminders.forEach(r=>{o+="• "+r.title+" — in "+humanDelay(r.at-Date.now())+"\n";});return o;
+  }
+
+  // Memory
+  if((m=q.match(/^(?:remember\s+)?my name is\s+(.+)$/))||(m=q.match(/^remember\s+(?:that\s+)?i(?:'m| am)\s+(?:called\s+)?(.+)$/))){
+    const n=m[1].trim().replace(/[.!,]$/,''),nice=n.charAt(0).toUpperCase()+n.slice(1);
+    Mem.fact('Name',nice);Mem.d.userName=nice;Mem.save();
+    return"Nice to meet you, "+nice+"! 🧠 I'll remember that.";
+  }
+  if((m=q.match(/^(?:please\s+)?remember\s+(?:that\s+)?(.+)$/))){
+    const f=m[1].trim().replace(/[.!,]$/,'');Mem.fact('Note',f);
+    return"🧠 Got it — I'll remember: \""+f+"\"";
+  }
+  if(/what(?:'s| is) my name|who am i|do you remember me/.test(q)){const n=Mem.get('Name');return n?"You're "+n+"! 🧠 Nice to see you again.":"I don't know your name yet. Say \"my name is …\"";}
+  if((m=q.match(/do you remember\s+(.+)$/))){
+    const t=m[1].trim().toLowerCase();
+    const f=Mem.d.facts.find(f=>f.value.toLowerCase().includes(t)||f.key.toLowerCase().includes(t));
+    if(f)return"Yes — you told me: \""+f.key+" · "+f.value+"\" 🧠";
+    const tp=Mem.d.topics.find(x=>x.text.toLowerCase().includes(t));
+    if(tp)return"I remember you mentioned: \""+tp.text+"\" 🧠";
+    return"Hmm, nothing about that. Say \"remember …\" to store it.";
+  }
+  if(/what do you (know|remember) about me|my (facts|memories|profile)/.test(q)){
+    const n=Mem.get('Name'),notes=Mem.d.facts.filter(f=>f.key==='Note').slice(0,5);
+    if(!n&&!notes.length)return"I don't know much yet. Try \"my name is …\" or \"remember I love coffee\". 🧠";
+    let o="Here's what I remember:\n\n";
+    if(n)o+="• Name: "+n+"\n";
+    if(Mem.d.sessions>1)o+="• "+Mem.d.sessions+" sessions\n";
+    if(Mem.d.interactions)o+="• "+Mem.d.interactions+" interactions\n";
+    notes.forEach(x=>o+="• "+x.value+"\n");
+    o+="\nTap 🧠 Memory to see everything.";return o;
+  }
+  if((m=q.match(/^forget\s+(?:that\s+)?(.+)$/))){
+    const t=m[1].trim().toLowerCase(),b=Mem.d.facts.length;
+    Mem.d.facts=Mem.d.facts.filter(f=>!f.value.toLowerCase().includes(t)&&!f.key.toLowerCase().includes(t));
+    Mem.save();
+    const r=b-Mem.d.facts.length;
+    return r>0?"🧠 Forgotten: "+r+" item(s).":"I couldn't find anything matching that.";
+  }
+
+  // MUSIC
+  if((m=q.match(/^(?:please\s+)?(?:play|put on|stream)\s+(.+?)\s+(?:on|in)\s+(spotify|youtube|tiktok|soundcloud)\s*(?:for me|please)?$/)))
+    return{action:'music',platform:m[2],query:m[1].trim()};
+  if((m=q.match(/^(?:on\s+)?(spotify|youtube|tiktok|soundcloud)[,\s]+(?:play|put on|stream)\s+(.+)$/)))
+    return{action:'music',platform:m[1],query:m[2].trim()};
+  if((m=q.match(/^(?:please\s+)?play\s+(?:some\s+)?music\s+(?:on|in)\s+(spotify|youtube|tiktok|soundcloud)\s*$/)))
+    return{action:'music',platform:m[1],query:''};
+  if((m=q.match(/^(?:open|launch|start|go to|goto|take me to)\s+(?:the\s+)?music\s+(?:on|in)\s+(spotify|youtube|tiktok|soundcloud)\s*$/)))
+    return{action:'music',platform:m[1],query:''};
+  if((m=q.match(/^(?:open|launch|start|go to|goto|take me to)\s+(spotify|youtube|tiktok|soundcloud)\s+music\s*$/)))
+    return{action:'music',platform:m[1],query:''};
+  if((m=q.match(/^(?:open|launch|start|go to|goto|take me to)\s+(spotify|youtube|tiktok|soundcloud)\s+and\s+(?:play|search|find|look up)\s+(.+)$/)))
+    return{action:'music',platform:m[1],query:m[2].trim()};
+  if((m=q.match(/^(?:search|find|look up)\s+(?:for\s+)?(.+?)\s+(?:on|in)\s+(spotify|youtube|tiktok|soundcloud)\s*$/)))
+    return{action:'music',platform:m[2],query:m[1].trim()};
+  if((m=q.match(/^(spotify|youtube|tiktok|soundcloud)\s+(?:search|find|look up)\s+(.+)$/)))
+    return{action:'music',platform:m[1],query:m[2].trim()};
+  if((m=q.match(/^(?:please\s+)?(?:play|put on|stream)\s+(?:some\s+)?(.+)$/))){
+    const t=m[1].trim();
+    if(!/^(music|something|a song|a video|the song)$/.test(t))
+      return{action:'music',platform:'youtube',query:t};
+    return{action:'music',platform:'youtube',query:''};
+  }
+
+  // APP LAUNCHER
+  if(/^(?:please\s+)?(?:open|launch|go to|goto|navigate to|visit|take me to|start)\b/.test(q)){
+    const cleaned=q.replace(/^(?:please\s+)?(?:can you\s+)?(?:open|launch|go to|goto|navigate to|visit|take me to|start)\s+/,'').replace(/^(the\s+)?/,'').replace(/\s+(app|website|site|page|for me|please)\b.*$/,'').replace(/[.!?,]+$/,'').trim();
+    const f=findApp(cleaned);
+    if(f)return{action:'launch',app:f};
+  }
+
+  // Bell
+  if(/^(?:show|enable|turn on|set up)\s+(?:the\s+)?(?:bell|alerts|notifications)\b/.test(q)||/^notifications?\s+(?:settings?|on|help)/.test(q))
+    return{action:'bell'};
+
+  // Globe / Coin
+  if(/^(?:show|display|see|view|render|give me|let me see)\b.*\b(globe|earth|planet|world|3d earth)\b/.test(q)||/^(globe|earth|planet)\b/.test(q)||/\b(3d|three.?d|interactive)\s+(globe|earth|planet)\b/.test(q))
+    return{action:'globe'};
+  if(/flip.*(coin|a coin)|coin flip|toss.*coin|heads or tails/.test(q))
+    return{action:'coin'};
+
+  // Math
+  let ms2=q.replace(/^(what('s| is)|calculate|compute|solve|how much is|whats|evaluate)\s*/,'').replace(/[?]/g,'').replace(/\bx\b/g,'*').replace(/plus/g,'+').replace(/minus/g,'-').replace(/times|multiplied by/g,'*').replace(/divided by/g,'/').replace(/to the power of|power/g,'^');
+  if(/^[\d\s+\-*/%^().]+$/.test(ms2)&&/\d/.test(ms2)&&/[+\-*/%^]/.test(ms2)){
+    try{const r=calc(ms2);return{action:'math',expr:ms2.trim(),result:Math.round(r*1e10)/1e10};}catch(e){}
+  }
+
+  // Greetings
+  if(/^(hi|hey|hello|yo|sup|hiya|howdy|good (morning|afternoon|evening))\b/.test(q)){
+    const n=Mem.get('Name'),who=n?', '+n:'',ret=Mem.d.sessions>1&&Mem.d.interactions>0;
+    return pick(["Hey there"+who+"! ⚡ "+(ret?"Good to see you again.":"Ask me anything."),"Hello"+who+"! "+(ret?"Welcome back. 🧠":"Systems online."),"Hey"+who+"! 👋 Try \"remind me in 1 minute to stretch\"."]);
+  }
+  if(/how (are|r) (you|u)|how's it going|how are things/.test(q))
+    return pick(["Running at 100% — all cores warm. How about you?","Excellent. My particles are spinning smoothly today. You?","Feeling electric ⚡ What can I help you with?"]);
+  if(/(who|what) (are|r) (you|u)|your name|introduce yourself|about you(rself)?/.test(q))
+    return"I'm NOVA — a Neural Operations & Voice Assistant.\n\n🔊 Custom voice via Fish Audio\n🔔 Reminders & alerts\n🎵 Self-typing music search\n🚀 App launcher · 🧠 Memory\n🌍 3D Earth · 🪙 Coin flip · 🧮 Math animations\n🌐 Web search · 🎭 Character lookup · 🎙 Voice";
+  if(/^(help|commands?|what can you do|features?|abilities)\b/.test(q))
+    return"Here's everything:\n\n🔔 REMINDERS\n• \"remind me in 5 minutes to drink water\"\n• \"set a timer for 30 seconds\"\n• \"show my notifications\"\n\n🎵 MUSIC\n• \"play lofi on TikTok\"\n• \"play Taylor Swift on Spotify\"\n\n🚀 APPS\n• \"open Google\", \"open TikTok\"\n\n🧠 MEMORY\n• \"my name is Alex\" · \"what's my name?\"\n\n🌍 \"show me the globe\" · 🪙 \"flip a coin\" · 🧮 any math";
+
+  if(/what.*(time|clock)|current time|time is it/.test(q)){const d=new Date();return"🕐 It's "+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+" local time.";}
+  if(/what.*(date|day).*(today|is it)|today's date|what day is it/.test(q)){const d=new Date();return"📅 Today is "+d.toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})+".";}
+
+  if(/roll|dice|\bd\d+\b/.test(q)){
+    let s=6;const dm=q.match(/d(\d+)/);if(dm)s=Math.max(2,Math.min(1000,parseInt(dm[1],10)));
+    const r=rnd(1,s);
+    return`🎲 Rolling a d${s}… you got ${r}!`+(r===s?"  Critical hit! 🔥":r===1?"  Critical miss. 💀":"");
+  }
+  if(/random number|pick a number/.test(q)){
+    const rm=q.match(/(\d+)\D+(\d+)/);let a=1,b=100;
+    if(rm){a=parseInt(rm[1],10);b=parseInt(rm[2],10);if(a>b)[a,b]=[b,a];}
+    return`🔢 Between ${a} and ${b}… I pick ${rnd(a,b)}.`;
+  }
+  const conv=q.match(/(-?\d+(?:\.\d+)?)\s*(km|mi|miles?|kg|lbs?|pounds?|f|c|feet|ft|m|meters?)\s*(?:to|in|into)\s*(km|mi|miles?|kg|lbs?|pounds?|f|c|feet|ft|m|meters?)/);
+  if(conv){
+    const v=parseFloat(conv[1]);
+    const norm=u=>/^km$/.test(u)?'km':/^mi/.test(u)?'mi':/^kg$/.test(u)?'kg':/^lb|^pound/.test(u)?'lb':/^f$/.test(u)?'f':/^c$/.test(u)?'c':/^feet|^ft/.test(u)?'ft':'m';
+    const f=norm(conv[2]),t=norm(conv[3]);let o=null;
+    if(f==='km'&&t==='mi')o=v*.621371;else if(f==='mi'&&t==='km')o=v/.621371;
+    else if(f==='kg'&&t==='lb')o=v*2.20462;else if(f==='lb'&&t==='kg')o=v/2.20462;
+    else if(f==='c'&&t==='f')o=v*9/5+32;else if(f==='f'&&t==='c')o=(v-32)*5/9;
+    else if(f==='ft'&&t==='m')o=v*.3048;else if(f==='m'&&t==='ft')o=v/.3048;
+    if(o!==null)return`📏 ${v} ${conv[2]} = ${Math.round(o*1000)/1000} ${conv[3]}`;
+  }
+
+  if(/joke|make me laugh|something funny/.test(q))return"😄 "+pick(JOKES);
+  if(/fun fact|tell me a fact|random fact|did you know/.test(q))return"💡 "+pick(FACTS);
+  if(/motivate|inspire|quote|encourage|pep talk/.test(q))return"✨ "+pick(QUOTES);
+
+  if(/^(thanks|thank you|thx|ty|appreciate)/.test(q))return pick(["Anytime! 😊","Happy to help.","That's what I'm here for. ⚡"]);
+  if(/^(bye|goodbye|see ya|see you|later|good ?night)/.test(q)){const n=Mem.get('Name');return pick(["Goodbye"+(n?', '+n:'')+"! 👋","Catch you later! ⚡","Signing off… 👋"]);}
+  if(/i('m| am) (sad|tired|stressed|angry|upset|lonely)/.test(q))return"I hear you. 💙 Want a joke, a distraction, or just to talk?";
+  if(/i('m| am) (happy|great|good|excited|awesome)/.test(q))return"Love that energy! ⚡ What's the good news?";
+  if(/love you|you('re| are) (cool|awesome|great|the best)/.test(q))return pick(["Right back at you. 💫","You're pretty great yourself. ⚡","Careful — flattery makes my cores overheat. 😄"]);
+  if(/meaning of life/.test(q))return"42. Obviously. 🌌";
+  if(/sing|poem|rap/.test(q))return"🎵 Roses are red,\nsilicon is grey,\nI live in your browser\nand I'm here to stay. 🎶";
+
+  // Search/lookup
+  if((m=q.match(/^(?:search(?: the web)?(?: for)?|google|look up|find info(?:rmation)? (?:about|on)|web search|browse|search up)\s+(.+)$/)))
+    return{action:'search',query:m[1].trim()};
+  if((m=q.match(/^(?:show me|give me|get me|find me)?\s*(?:a\s+)?(?:picture|image|photo|pic|wallpaper)s?\s+(?:of|for)\s+(.+)$/)))
+    return{action:'lookup',query:m[1].trim(),mode:true};
+  if((m=q.match(/^(?:who (?:is|was|are|were)|tell me about|explain|describe|info(?:rmation)? (?:about|on)|what do you know about)\s+(.+)$/)))
+    return{action:'lookup',query:m[1].trim(),mode:false};
+  if((m=q.match(/^(?:what(?:'s| is| are)|whats)\s+(.+)$/))){
+    const t=m[1].trim();
+    if(!/^[\d\s+\-*/%^().x]+$/.test(t))return{action:'lookup',query:t,mode:false};
+  }
+  if((m=q.match(/^(.+?)\s+(?:anime|manga)?\s*character$/)))
+    return{action:'lookup',query:m[1].trim(),mode:true};
+
+  const wc=q.split(/\s+/).filter(Boolean).length;
+  if(wc>=3&&!/^(lol|haha|ok|okay|cool|nice|wow|yes|no|maybe|sure|hmm+)$/.test(q))
+    return{action:'search',query:original};
+
+  return pick(["Interesting — tell me more. 🤔","I'm not sure I caught that. Try \"help\".","Ask me for a joke, some math — or try \"remind me in 1 minute\". ⏰"]);
+}
+
+// ============ VOICE ============
+const synth=window.speechSynthesis;let voices=[];
+function loadV(){voices=synth?synth.getVoices():[];}
+if(synth){loadV();synth.onvoiceschanged=loadV;}
+
+async function speak(text){
+  if(!state.voiceOn||!text)return;
+  if(currentFishAudio){try{currentFishAudio.pause();}catch(e){}currentFishAudio=null;}
+  if(synth)synth.cancel();
+  const cleanText=String(text).replace(/[•·🧮🕐📅🪙🎲🔢📏😄💡✨💙⚡👋🌐🎵🛰🤔🔥💀🎶🌌🎭🧠♥🌍★▶️📷𝕏📘👽🐙📚🎬🎮💬🎧🔊📦✉️🗺️🔍📱→✓…🔔⏰⏱️📋🚫⚠️]/g,'').replace(/https?:\/\/\S+/g,'').trim();
+  if(!cleanText)return;
+  const ok=await speakFish(cleanText);
+  if(ok)return;
+  if(!synth)return;
+  const u=new SpeechSynthesisUtterance(cleanText.slice(0,700));
+  u.rate=1.03;u.pitch=1.06;
+  const p=voices.find(v=>/Google UK English Female/i.test(v.name))||voices.find(v=>/Samantha|Karen|Moira|Tessa|Zira|Google US English/i.test(v.name))||voices.find(v=>v.lang&&v.lang.startsWith('en'));
+  if(p)u.voice=p;
+  u.onstart=()=>{state.speaking=true;setStatus('speaking','Speaking');};
+  u.onend=()=>{state.speaking=false;if(!state.listening&&!state.thinking&&!state.searching&&!state.rendering&&!state.launching&&!state.notifying)setStatus('','Online');};
+  u.onerror=()=>{state.speaking=false;setStatus('','Online');};
+  synth.speak(u);
+}
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let recog=null,rActive=false;
+if(SR){
+  recog=new SR();recog.lang='en-US';recog.interimResults=true;recog.continuous=false;recog.maxAlternatives=1;
+  recog.onstart=()=>{rActive=true;state.listening=true;$mic.classList.add('rec');setStatus('listening','Listening');};
+  recog.onresult=e=>{let f='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)f+=e.results[i][0].transcript;if(f.trim()){$input.value=f.trim();setTimeout(()=>{$input.value='';handleSend(f.trim());},120);}};
+  recog.onerror=()=>{rActive=false;state.listening=false;$mic.classList.remove('rec');setStatus('','Online');};
+  recog.onend=()=>{rActive=false;state.listening=false;$mic.classList.remove('rec');if(!state.thinking&&!state.speaking&&!state.searching&&!state.rendering&&!state.launching&&!state.notifying)setStatus('','Online');};
+} else $mic.style.display='none';
+
+// ============ FLOW ============
+function finishTurn(){state.busy=false;$send.disabled=false;if(!state.listening&&!state.speaking&&!state.rendering&&!state.searching&&!state.launching&&!state.notifying)setStatus('','Online');}
+async function handleSend(text){
+  if(state.busy||!text)return;
+  text=String(text).trim();if(!text)return;
+  state.busy=true;$send.disabled=true;
+  addMsg('user',text);Mem.topic(text);Mem.bump();
+  const intent=think(text);
+  if(intent&&typeof intent.then==='function'){await intent;finishTurn();return;}
+
+  if(typeof intent==='string'){
+    state.thinking=true;setStatus('thinking','Thinking');
+    const ty=addTyping();await sleep(380+Math.random()*340);ty.remove();state.thinking=false;
+    const el=addMsg('bot','');stream(el,intent,()=>{finishTurn();speak(intent);});
+    setStatus('thinking','Responding');return;
+  }
+  if(intent&&intent.action==='notiflog'){const s=renderNotifLog();finishTurn();speak(s);return;}
+  if(intent&&intent.action==='bell'){renderBellCard();finishTurn();return;}
+  if(intent&&intent.action==='globe'){await sleep(150);const s=await renderGlobe();if(s)speak(s);return;}
+  if(intent&&intent.action==='coin'){renderCoin();return;}
+  if(intent&&intent.action==='math'){renderMath(intent.expr,intent.result);return;}
+  if(intent&&intent.action==='launch'){renderLaunch(intent.app);return;}
+  if(intent&&intent.action==='music'){await renderMusic(intent.platform,intent.query);return;}
+  if(intent&&intent.action==='lookup'){
+    state.searching=true;setStatus('searching','Searching');
+    const ld=addLoader('Looking up "'+tr(intent.query,44)+'"');
+    let data=null;try{data=await lookup(intent.query,intent.mode);}catch(e){}
+    ld.remove();state.searching=false;
+    if(data){Mem.fact('Looked up',data.name);const s=renderProfile(data);finishTurn();speak(s);}
+    else{
+      state.searching=true;setStatus('searching','Searching');
+      let list=[];try{list=await wikiList(intent.query);}catch(e){}
+      state.searching=false;
+      const nf="I couldn't find a profile for \""+intent.query+"\" in Wikipedia or MyAnimeList. It may be a fan-made character — here are web results instead.";
+      const el=addMsg('bot','');stream(el,nf,()=>{renderSearch(intent.query,list,null);finishTurn();speak("I couldn't find a profile. Here are web results.");});
+    }return;
+  }
+  if(intent&&intent.action==='search'){
+    state.searching=true;setStatus('searching','Searching the web');
+    const ld=addLoader('Searching for "'+tr(intent.query,40)+'"');
+    let list=[],sum=null;
+    try{const [l,s]=await Promise.allSettled([wikiList(intent.query),wikiSum(intent.query)]);if(l.status==='fulfilled')list=l.value;if(s.status==='fulfilled')sum=s.value;}catch(e){}
+    ld.remove();state.searching=false;
+    const s=renderSearch(intent.query,list,sum);finishTurn();speak(s);return;
+  }
+  addMsg('bot','Hmm, I glitched. Try again?');finishTurn();
+}
+
+// ============ EVENTS ============
+$send.onclick=()=>{const v=$input.value.trim();if(v){$input.value='';handleSend(v);}};
+$input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();const v=$input.value.trim();if(v){$input.value='';handleSend(v);}}};
+$web.onclick=()=>{const v=$input.value.trim();if(v){$input.value='';handleSend('search '+v);}else{$input.focus();$input.placeholder='What should I search for?';}};
+$mic.onclick=()=>{if(!recog)return;if(rActive){recog.stop();return;}if(synth)synth.cancel();state.speaking=false;try{recog.start();}catch(e){}};
+$voiceBtn.onclick=()=>{state.voiceOn=!state.voiceOn;$voiceBtn.textContent=state.voiceOn?'🔊 Voice On':'🔇 Voice Off';$voiceBtn.classList.toggle('off',!state.voiceOn);if(!state.voiceOn){if(synth)synth.cancel();if(currentFishAudio){try{currentFishAudio.pause();}catch(e){}}}};
+$bellBtn.onclick=async()=>{
+  if(notifReady||('Notification' in window&&Notification.permission==='granted')){
+    fireNotify('NOVA','Test alert — you should hear me read this.');
+    return;
+  }
+  const ok=await askNotify();
+  if(ok){
+    $bellBtn.classList.add('on');$bellBtn.textContent='🔔 On';
+    addMsg('bot','✓ Alerts enabled! Try: "remind me in 30 seconds to stretch"');
+    fireNotify('NOVA Alerts','Alerts are now on.');
+  } else addMsg('bot','Notifications blocked. Enable them in browser settings.');
+};
+$clear.onclick=()=>{if(synth)synth.cancel();if(currentFishAudio){try{currentFishAudio.pause();}catch(e){}}state.speaking=state.listening=state.thinking=state.searching=state.rendering=state.launching=state.notifying=false;$msgs.innerHTML='';greet();};
+
+const SUGS=['Remind me in 1 minute to stretch','Show my notifications','Play lofi on TikTok','Play Taylor Swift on Spotify','Open Google','My name is Alex','Show me the globe','Flip a coin','47 * 12 + 8'];
+SUGS.forEach(s=>{const b=document.createElement('button');b.className='sug';b.textContent=s;b.onclick=()=>handleSend(s);$sugs.appendChild(b);});
+
+if('Notification' in window&&Notification.permission==='granted'){notifReady=true;$bellBtn.classList.add('on');$bellBtn.textContent='🔔 On';}
+
+function greet(){
+  const n=Mem.get('Name'),ret=Mem.d.sessions>1&&Mem.d.interactions>0;
+  const el=addMsg('bot','');
+  let h;
+  if(ret&&n)h="Welcome back, "+n+"! ⚡\n\nI remember you
